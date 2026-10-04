@@ -1,27 +1,81 @@
 import AppKit
+import ClippaCore
 
 /// The short clicks played when something is copied and when Clippa
-/// pastes (Settings → General → Play sounds). They are synthesized here,
-/// so the app ships no sound files.
+/// pastes (Settings → General → Play sounds). The built-in ones are
+/// synthesized here, so the app ships no sound files; any other sound can
+/// be chosen in Settings and is copied into Clippa's data folder.
 @MainActor
 enum Sounds {
-    private static let copySound = tone(from: 1_250, to: 1_050, duration: 0.11, volume: 0.22)
-    private static let pasteSound = tone(from: 760, to: 620, duration: 0.07, volume: 0.28)
+    enum Kind: String, CaseIterable {
+        case copy, paste
+
+        /// Preference holding the name of the chosen file, for Settings.
+        var nameKey: String { "\(rawValue)SoundName" }
+    }
+
+    private static let builtIn: [Kind: NSSound] = [
+        .copy: tone(from: 1_250, to: 1_050, duration: 0.11, volume: 0.22),
+        .paste: tone(from: 760, to: 620, duration: 0.07, volume: 0.28),
+    ].compactMapValues { $0 }
+    private static var custom: [Kind: NSSound] = [:]
 
     static var enabled: Bool {
         UserDefaults.standard.bool(forKey: Pref.playSounds)
     }
 
-    static func playCopy() {
-        guard enabled else { return }
-        copySound?.stop()
-        copySound?.play()
+    static func playCopy() { play(.copy) }
+    static func playPaste() { play(.paste) }
+
+    static func play(_ kind: Kind, evenIfOff: Bool = false) {
+        guard enabled || evenIfOff, let sound = sound(for: kind) else { return }
+        sound.stop()
+        sound.play()
     }
 
-    static func playPaste() {
-        guard enabled else { return }
-        pasteSound?.stop()
-        pasteSound?.play()
+    private static var folder: URL {
+        ClippaPaths.dataDirectory.appendingPathComponent("Sounds", isDirectory: true)
+    }
+
+    /// The chosen file, if any: Sounds/copy.<ext> or Sounds/paste.<ext>.
+    private static func customFile(_ kind: Kind) -> URL? {
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
+        return names.first { ($0 as NSString).deletingPathExtension == kind.rawValue }
+            .map { folder.appendingPathComponent($0) }
+    }
+
+    private static func sound(for kind: Kind) -> NSSound? {
+        if let cached = custom[kind] { return cached }
+        if let file = customFile(kind), let sound = NSSound(contentsOf: file, byReference: false) {
+            custom[kind] = sound
+            return sound
+        }
+        return builtIn[kind]
+    }
+
+    /// Name of the chosen sound, or nil for the built-in one.
+    static func customName(_ kind: Kind) -> String? {
+        guard customFile(kind) != nil else { return nil }
+        return UserDefaults.standard.string(forKey: kind.nameKey) ?? customFile(kind)?.lastPathComponent
+    }
+
+    /// Copies a sound file into Clippa's data folder and uses it.
+    static func setCustom(_ kind: Kind, from source: URL) throws {
+        guard NSSound(contentsOf: source, byReference: true) != nil else {
+            throw NSError(domain: "Clippa", code: 2, userInfo: [NSLocalizedDescriptionKey: L("This file is not a sound macOS can play.")])
+        }
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        if let old = customFile(kind) { try FileManager.default.removeItem(at: old) }
+        let ext = source.pathExtension.isEmpty ? "aiff" : source.pathExtension
+        try FileManager.default.copyItem(at: source, to: folder.appendingPathComponent("\(kind.rawValue).\(ext)"))
+        UserDefaults.standard.set(source.lastPathComponent, forKey: kind.nameKey)
+        custom[kind] = nil
+    }
+
+    static func useBuiltIn(_ kind: Kind) {
+        if let file = customFile(kind) { try? FileManager.default.removeItem(at: file) }
+        UserDefaults.standard.removeObject(forKey: kind.nameKey)
+        custom[kind] = nil
     }
 
     /// A sine blip gliding from one pitch to another, with a quick attack

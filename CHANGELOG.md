@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 (2026-10-04)
+
+* Sounds when something is copied and when Clippa pastes, on by default, like Paste. Choose your own sound files in Settings → General.
+* The Accessibility alert shows once per launch, then a short reminder, and explains what to do when Clippa is switched on but macOS remembers an older build.
+* Copies are processed in the background, so big images never freeze the interface.
+* "Delete after…" rules are applied every 5 minutes.
+* Settings warns when another app already uses one of Clippa's shortcuts.
+
 ## 1.0.0 (2026-10-04)
 
 First release.

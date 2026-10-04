@@ -159,6 +159,12 @@
 "Lets Clippa press ⌘V in the app you are using. Nothing else. If Clippa is already switched on in that list but this still shows a warning, remove it with − and switch it on again." = "Permette a Clippa di premere ⌘V nell'app che stai usando. Nient'altro. Se Clippa è già attiva in quell'elenco ma qui resta l'avviso, toglila con − e riattivala.";
 "Always paste as plain text" = "Incolla sempre come testo semplice";
 "Play sounds" = "Riproduci suoni";
+"When something is copied" = "Quando copi qualcosa";
+"When Clippa pastes" = "Quando Clippa incolla";
+"Built-in" = "Predefinito";
+"Play" = "Ascolta";
+"Use Built-in" = "Usa predefinito";
+"This file is not a sound macOS can play." = "Questo file non è un suono che macOS sa riprodurre.";
 "Clipboard access" = "Accesso agli appunti";
 "macOS asks before an app reads the clipboard by itself. Choose “Always Allow” for Clippa in Privacy & Security → Paste from Other Apps." = "macOS chiede il permesso prima che un'app legga gli appunti da sola. Scegli “Consenti sempre” per Clippa in Privacy e sicurezza → Incolla da altre app.";
 "Delete and Apply" = "Elimina e applica";

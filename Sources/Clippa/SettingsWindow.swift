@@ -131,6 +131,10 @@ struct GeneralSettings: View {
                 }
                 Toggle(L("Always paste as plain text"), isOn: $alwaysPlainText)
                 Toggle(L("Play sounds"), isOn: $playSounds)
+                if playSounds {
+                    SoundRow(kind: .copy, title: L("When something is copied"))
+                    SoundRow(kind: .paste, title: L("When Clippa pastes"))
+                }
             }
             if #available(macOS 15.4, *) {
                 Section {
@@ -185,6 +189,47 @@ struct GeneralSettings: View {
         app.storeDidChange()
         app.shelf.externalChange()
         update()
+    }
+}
+
+/// One of the two sounds: play it, choose another file, or go back to
+/// the built-in click.
+struct SoundRow: View {
+    let kind: Sounds.Kind
+    let title: String
+    @State private var name: String?
+
+    var body: some View {
+        LabeledContent(title) {
+            HStack(spacing: 8) {
+                Text(name ?? L("Built-in")).foregroundStyle(.secondary).lineLimit(1)
+                Button { Sounds.play(kind, evenIfOff: true) } label: { Image(systemName: "play.fill") }
+                    .buttonStyle(.borderless)
+                    .help(L("Play"))
+                Button(L("Choose…")) { choose() }
+                if name != nil {
+                    Button(L("Use Built-in")) {
+                        Sounds.useBuiltIn(kind)
+                        name = nil
+                    }
+                }
+            }
+        }
+        .onAppear { name = Sounds.customName(kind) }
+    }
+
+    private func choose() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.audio]
+        panel.prompt = L("Choose")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try Sounds.setCustom(kind, from: url)
+            name = Sounds.customName(kind)
+            Sounds.play(kind, evenIfOff: true)
+        } catch {
+            NSAlert(error: error).runModal()
+        }
     }
 }
 

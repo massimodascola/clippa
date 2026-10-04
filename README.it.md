@@ -20,6 +20,7 @@ Clippa è un progetto indipendente, non collegato a Paste né ai suoi autori.
 * **Suggerimenti** (✦): gli elementi adatti all'app in cui stai incollando, ordinati sul tuo Mac, con Apple Intelligence quando c'è.
 * **Strumenti AI**: Claude, Codex, Cursor e gli altri client MCP possono cercare nella cronologia, se lo permetti.
 * **Sincronizzazione tra Mac** con iCloud Drive (o qualsiasi cartella sincronizzata), anche in modalità "solo bacheche".
+* **Suoni** quando copi e quando Clippa incolla; puoi scegliere i tuoi file audio nelle Impostazioni.
 * **Privacy**: le password e le app che scegli non vengono mai salvate. Puoi sospendere Clippa quando vuoi.
 
 L'app è in inglese, con una traduzione italiana che macOS sceglie da solo quando il Mac è impostato in italiano.

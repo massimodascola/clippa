@@ -20,6 +20,7 @@ Clippa is an independent project, not affiliated with Paste or its makers.
 * **Suggestions** (✦): the items that fit the app you are pasting into, ranked on your Mac, with Apple Intelligence when available.
 * **AI tools**: Claude, Codex, Cursor and other MCP clients can search your history, if you allow it.
 * **Sync between Macs** through iCloud Drive (or any synced folder), with a "pinboards only" mode.
+* **Sounds** when you copy and when Clippa pastes; pick your own sound files in Settings.
 * **Privacy**: passwords and apps you choose are never saved. Pause Clippa at any time.
 
 The app is in English, with an Italian translation that macOS picks automatically when your Mac is set to Italian.
