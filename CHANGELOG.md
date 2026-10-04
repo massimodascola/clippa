@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0 (2026-10-04)
+
+* Opening Clippa by hand (from Applications, Spotlight or Launchpad) shows the shelf, like Paste; at login it stays in the menu bar. The shelf also appears right after the first-launch setup.
+* When Clippa itself is in front, items are pasted into the app whose window is on top.
+
 ## 1.1.0 (2026-10-04)
 
 * Sounds when something is copied and when Clippa pastes, on by default, like Paste. Choose your own sound files in Settings → General.

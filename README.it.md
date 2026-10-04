@@ -81,7 +81,7 @@ Spegni "Apri Clippa al login" nelle Impostazioni, esci da Clippa dall'icona nell
 
 ## Come si usa
 
-Premi **⇧⌘V** (oppure fai clic sull'icona nella barra dei menu, poi Apri Clippa). Inizia a scrivere per cercare.
+Premi **⇧⌘V** (oppure fai clic sull'icona nella barra dei menu e poi Apri Clippa, o apri Clippa da Applicazioni o Spotlight). Inizia a scrivere per cercare.
 
 | Tasti | Azione |
 |---|---|

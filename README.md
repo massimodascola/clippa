@@ -81,7 +81,7 @@ Turn off "Open Clippa at login" in Settings, quit Clippa from its menu bar icon,
 
 ## How to use it
 
-Press **⇧⌘V** (or click the menu bar icon, then Open Clippa). Start typing to search.
+Press **⇧⌘V** (or click the menu bar icon, then Open Clippa, or open Clippa from Applications or Spotlight). Start typing to search.
 
 | Keys | Action |
 |---|---|

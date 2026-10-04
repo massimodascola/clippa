@@ -33,10 +33,13 @@ final class PasteService {
         Sounds.playPaste()
         // Give the shelf time to close and the target app time to take the
         // keyboard back before the keystroke arrives.
+        var delay = 0.08
         if let target, !target.isActive {
+            // Clippa was in front: bring the app back first, then paste.
             target.activate()
+            delay = 0.25
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             Self.sendCommandV()
         }
         return .pasted

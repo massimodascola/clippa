@@ -65,7 +65,13 @@ final class ShelfController: NSObject, NSWindowDelegate {
     func show() {
         guard !isVisible else { return }
         let front = NSWorkspace.shared.frontmostApplication
-        target = front?.bundleIdentifier == Bundle.main.bundleIdentifier ? target : front
+        if front?.processIdentifier == ProcessInfo.processInfo.processIdentifier {
+            // Clippa itself is in front (just opened by hand, or Settings is
+            // open): paste into the app whose window is on top.
+            target = Self.appBehindClippa() ?? target
+        } else {
+            target = front
+        }
         model.prepareForShow()
         if model.showingSuggestions { refreshSuggestions() }
 
@@ -110,6 +116,20 @@ final class ShelfController: NSObject, NSWindowDelegate {
         } else {
             panel.orderOut(nil)
         }
+    }
+
+    /// The app owning the frontmost normal window that is not Clippa's.
+    /// Window owners can be read without the Screen Recording permission.
+    private static func appBehindClippa() -> NSRunningApplication? {
+        let me = ProcessInfo.processInfo.processIdentifier
+        let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)
+            as? [[String: Any]] ?? []
+        for window in windows where (window[kCGWindowLayer as String] as? Int) == 0 {
+            guard let pid = window[kCGWindowOwnerPID as String] as? pid_t, pid != me,
+                  let app = NSRunningApplication(processIdentifier: pid), app.activationPolicy == .regular else { continue }
+            return app
+        }
+        return nil
     }
 
     private func targetFrame(on screen: NSScreen, height: CGFloat) -> NSRect {

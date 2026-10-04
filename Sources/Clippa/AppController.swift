@@ -26,6 +26,21 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: - Launch
 
+    /// True when macOS started Clippa at login: then it stays quietly in
+    /// the menu bar. Opened by hand, it shows the shelf, like Paste.
+    private var launchedAtLogin = false
+
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // The "open application" event says whether this is a login launch.
+        if let event = NSAppleEventManager.shared().currentAppleEvent,
+           event.eventID == AEEventID(kAEOpenApplication),
+           event.paramDescriptor(forKeyword: AEKeyword(keyAEPropData))?.enumCodeValue == OSType(keyAELaunchedAsLogInItem) {
+            launchedAtLogin = true
+        }
+        // Fallback: a launch in the first minutes after the Mac starts.
+        if ProcessInfo.processInfo.systemUptime < 180 { launchedAtLogin = true }
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppController.shared = self
         Pref.registerDefaults()
@@ -74,6 +89,8 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         if !UserDefaults.standard.bool(forKey: Pref.onboardingDone) {
             showOnboarding()
+        } else if !launchedAtLogin {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in self?.shelf.show() }
         }
         DebugHooks.installIfRequested(app: self)
     }
@@ -245,6 +262,8 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func onboardingFinished() {
         onboardingWindow = nil
+        // Like Paste: once set up, show what Clippa looks like.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in self?.shelf.show() }
     }
 
     private var permissionHelpShown = false
