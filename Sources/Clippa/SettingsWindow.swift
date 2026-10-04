@@ -126,7 +126,7 @@ struct GeneralSettings: View {
                 if destination == PasteDestination.activeApp.rawValue {
                     PermissionRow(granted: canPaste,
                                   title: L("Accessibility"),
-                                  detail: L("Lets Clippa press ⌘V in the app you are using. Nothing else."),
+                                  detail: L("Lets Clippa press ⌘V in the app you are using. Nothing else. If Clippa is already switched on in that list but this still shows a warning, remove it with − and switch it on again."),
                                   action: Permissions.requestAccessibility)
                 }
                 Toggle(L("Always paste as plain text"), isOn: $alwaysPlainText)

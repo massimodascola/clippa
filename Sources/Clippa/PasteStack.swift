@@ -74,6 +74,7 @@ final class PasteStack {
         PasteboardWriter.write([item], store: store, mode: UserDefaults.standard.bool(forKey: Pref.alwaysPlainText) ? .plainText : .original)
         try? store.recordPaste(itemID: item.id, into: NSWorkspace.shared.frontmostApplication?.bundleIdentifier)
         items.removeAll { $0.id == item.id }
+        Sounds.playPaste()
     }
 
     private func installTap() {

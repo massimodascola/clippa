@@ -96,6 +96,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
             guard let content = ClipboardMonitor.process(raw), let item = try? store.save(content) else { return }
             DispatchQueue.main.async {
                 guard let self else { return }
+                Sounds.playCopy()
                 self.enricher.process(item)
                 self.stack.add(item)
                 self.shelf.externalChange()
@@ -246,12 +247,20 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         onboardingWindow = nil
     }
 
+    private var permissionHelpShown = false
+
     /// The first paste without Accessibility: explain, like Paste does.
+    /// After that, only a short reminder, so pasting is never blocked.
     func showPastePermissionHelp() {
+        guard !permissionHelpShown else {
+            HUD.show(L("Copied: press ⌘V to paste"))
+            return
+        }
+        permissionHelpShown = true
         NSApp.activate()
         let alert = NSAlert()
         alert.messageText = L("Allow Clippa to paste for you")
-        alert.informativeText = L("The item is on the clipboard: press ⌘V to paste it.\n\nTo paste straight into the app you are using, allow Clippa in System Settings → Privacy & Security → Accessibility (Device Control and Data Access on macOS 27). Clippa only sends ⌘V to the app in front.")
+        alert.informativeText = L("The item is on the clipboard: press ⌘V to paste it.\n\nTo paste straight into the app you are using, allow Clippa in System Settings → Privacy & Security → Accessibility (Device Control and Data Access on macOS 27). Clippa only sends ⌘V to the app in front.\n\nAlready switched on? macOS is remembering an older copy of Clippa: select Clippa in that list, remove it with the − button, then switch it on again.")
         alert.addButton(withTitle: L("Open System Settings"))
         alert.addButton(withTitle: L("Not Now"))
         if alert.runModal() == .alertFirstButtonReturn {

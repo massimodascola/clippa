@@ -132,7 +132,8 @@
 "Quit Clippa" = "Esci da Clippa";
 "Clippa can't open its data" = "Clippa non riesce ad aprire i suoi dati";
 "Allow Clippa to paste for you" = "Permetti a Clippa di incollare per te";
-"The item is on the clipboard: press ⌘V to paste it.\n\nTo paste straight into the app you are using, allow Clippa in System Settings → Privacy & Security → Accessibility (Device Control and Data Access on macOS 27). Clippa only sends ⌘V to the app in front." = "L'elemento è negli appunti: premi ⌘V per incollarlo.\n\nPer incollare direttamente nell'app che stai usando, consenti Clippa in Impostazioni di Sistema → Privacy e sicurezza → Accessibilità (Controllo del dispositivo e accesso ai dati su macOS 27). Clippa invia solo ⌘V all'app in primo piano.";
+"The item is on the clipboard: press ⌘V to paste it.\n\nTo paste straight into the app you are using, allow Clippa in System Settings → Privacy & Security → Accessibility (Device Control and Data Access on macOS 27). Clippa only sends ⌘V to the app in front.\n\nAlready switched on? macOS is remembering an older copy of Clippa: select Clippa in that list, remove it with the − button, then switch it on again." = "L'elemento è negli appunti: premi ⌘V per incollarlo.\n\nPer incollare direttamente nell'app che stai usando, consenti Clippa in Impostazioni di Sistema → Privacy e sicurezza → Accessibilità (Controllo del dispositivo e accesso ai dati su macOS 27). Clippa invia solo ⌘V all'app in primo piano.\n\nÈ già attiva? macOS ricorda una copia precedente di Clippa: seleziona Clippa in quell'elenco, toglila con il pulsante −, poi riattivala.";
+"Copied: press ⌘V to paste" = "Copiato: premi ⌘V per incollare";
 "Open System Settings" = "Apri Impostazioni di Sistema";
 "Not Now" = "Non ora";
 "Delete “%@”?" = "Eliminare “%@”?";
@@ -155,7 +156,7 @@
 "To the active app" = "Nell'app attiva";
 "To the clipboard only" = "Solo negli appunti";
 "Accessibility" = "Accessibilità";
-"Lets Clippa press ⌘V in the app you are using. Nothing else." = "Permette a Clippa di premere ⌘V nell'app che stai usando. Nient'altro.";
+"Lets Clippa press ⌘V in the app you are using. Nothing else. If Clippa is already switched on in that list but this still shows a warning, remove it with − and switch it on again." = "Permette a Clippa di premere ⌘V nell'app che stai usando. Nient'altro. Se Clippa è già attiva in quell'elenco ma qui resta l'avviso, toglila con − e riattivala.";
 "Always paste as plain text" = "Incolla sempre come testo semplice";
 "Play sounds" = "Riproduci suoni";
 "Clipboard access" = "Accesso agli appunti";

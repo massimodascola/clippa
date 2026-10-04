@@ -164,6 +164,7 @@ final class ShelfController: NSObject, NSWindowDelegate {
     @discardableResult
     func copy(_ items: [Item]) -> Bool {
         let done = pasteService.copy(items, plainText: false)
+        if done { Sounds.playCopy() }
         storeDidChange()
         return done
     }

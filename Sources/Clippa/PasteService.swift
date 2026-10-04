@@ -26,8 +26,11 @@ final class PasteService {
         for item in items {
             try? store.recordPaste(itemID: item.id, into: target?.bundleIdentifier)
         }
-        guard Pref.destination == .activeApp else { return .copiedOnly }
-        guard Permissions.canPaste else { return .needsPermission }
+        guard Pref.destination == .activeApp, Permissions.canPaste else {
+            Sounds.playCopy()
+            return Pref.destination == .activeApp ? .needsPermission : .copiedOnly
+        }
+        Sounds.playPaste()
         // Give the shelf time to close and the target app time to take the
         // keyboard back before the keystroke arrives.
         if let target, !target.isActive {
@@ -47,9 +50,6 @@ final class PasteService {
         let written = PasteboardWriter.write(items, store: store, mode: plain ? .plainText : .original)
         if written, items.count == 1 {
             try? store.markCopied(items[0].id)
-        }
-        if written, UserDefaults.standard.bool(forKey: Pref.playSounds) {
-            NSSound(named: "Pop")?.play()
         }
         return written
     }

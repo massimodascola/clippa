@@ -95,7 +95,7 @@ enum Pref {
             fetchLinkPreviews: true,
             recognizeText: true,
             showMenuBarIcon: true,
-            playSounds: false,
+            playSounds: true,
             quickPasteModifier: ModifierChoice.command.rawValue,
             plainTextModifier: ModifierChoice.shift.rawValue,
             panelHeight: 330.0,
