@@ -38,7 +38,7 @@ public enum PasteboardWriter {
             pasteboardItems = [item]
         }
         pasteboardItems[0].setData(Data(), forType: ownType)
-        pasteboardItems[0].setString(ClippaPaths.bundleID, forType: NSPasteboard.PasteboardType(UTType.source))
+        pasteboardItems[0].setString(ClippaPaths.bundleID, forType: NSPasteboard.PasteboardType(UTI.source))
 
         pasteboard.clearContents()
         return pasteboard.writeObjects(pasteboardItems)
@@ -46,13 +46,13 @@ public enum PasteboardWriter {
 
     /// The item's text without formatting: what "Paste as Plain Text" uses.
     public static func plainText(of item: Item, store: ClippaStore) -> String {
-        for type in [UTType.plainText, UTType.string] {
+        for type in [UTI.plainText, UTI.string] {
             if let rep = item.representations.first(where: { $0.type == type }),
                let data = store.blobs.read(rep.blob), let string = String(data: data, encoding: .utf8) {
                 return string
             }
         }
-        if item.kind == .text, let rtf = item.representations.first(where: { $0.type == UTType.rtf }),
+        if item.kind == .text, let rtf = item.representations.first(where: { $0.type == UTI.rtf }),
            let data = store.blobs.read(rtf.blob),
            let attributed = NSAttributedString(rtf: data, documentAttributes: nil) {
             return attributed.string

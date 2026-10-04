@@ -354,7 +354,7 @@ public final class MCPServer {
     }
 
     private func fullText(of item: Item, store: ClippaStore) -> String {
-        let plain = item.representations.first { $0.type == UTType.plainText || $0.type == UTType.string }
+        let plain = item.representations.first { $0.type == UTI.plainText || $0.type == UTI.string }
         if let plain, let data = store.blobs.read(plain.blob), let string = String(data: data, encoding: .utf8) {
             return string
         }
@@ -364,7 +364,7 @@ public final class MCPServer {
     private func imageData(of item: Item, store: ClippaStore) -> (data: Data, mime: String)? {
         // Prefer the original PNG or JPEG if it is not too heavy for a chat.
         let limit = 1_500_000
-        for (type, mime) in [(UTType.png, "image/png"), (UTType.jpeg, "image/jpeg")] {
+        for (type, mime) in [(UTI.png, "image/png"), (UTI.jpeg, "image/jpeg")] {
             if let rep = item.representations.first(where: { $0.type == type }), rep.size <= limit,
                let data = store.blobs.read(rep.blob) {
                 return (data, mime)

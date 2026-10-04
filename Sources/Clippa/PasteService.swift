@@ -1,0 +1,67 @@
+import AppKit
+import ClippaCore
+import ClippaPasteboard
+
+/// Puts items back on the clipboard and, when allowed, pastes them into the
+/// app you were using by sending it Command-V. That keystroke is the only
+/// thing Clippa sends to other apps.
+@MainActor
+final class PasteService {
+    private let store: ClippaStore
+
+    init(store: ClippaStore) {
+        self.store = store
+    }
+
+    enum Result {
+        case pasted
+        case copiedOnly
+        case needsPermission
+    }
+
+    /// Copies the items and pastes them into `target`.
+    @discardableResult
+    func paste(_ items: [Item], plainText: Bool, into target: NSRunningApplication?) -> Result {
+        guard copy(items, plainText: plainText) else { return .copiedOnly }
+        for item in items {
+            try? store.recordPaste(itemID: item.id, into: target?.bundleIdentifier)
+        }
+        guard Pref.destination == .activeApp else { return .copiedOnly }
+        guard Permissions.canPaste else { return .needsPermission }
+        // Give the shelf time to close and the target app time to take the
+        // keyboard back before the keystroke arrives.
+        if let target, !target.isActive {
+            target.activate()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            Self.sendCommandV()
+        }
+        return .pasted
+    }
+
+    /// Copies the items to the clipboard only. A single item also moves to
+    /// the front of the history, since it is the latest thing copied.
+    @discardableResult
+    func copy(_ items: [Item], plainText: Bool) -> Bool {
+        let plain = plainText || UserDefaults.standard.bool(forKey: Pref.alwaysPlainText)
+        let written = PasteboardWriter.write(items, store: store, mode: plain ? .plainText : .original)
+        if written, items.count == 1 {
+            try? store.markCopied(items[0].id)
+        }
+        if written, UserDefaults.standard.bool(forKey: Pref.playSounds) {
+            NSSound(named: "Pop")?.play()
+        }
+        return written
+    }
+
+    static func sendCommandV() {
+        let source = CGEventSource(stateID: .combinedSessionState)
+        let key = KeyboardLayout.vKeyCode
+        let down = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: true)
+        let up = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: false)
+        down?.flags = .maskCommand
+        up?.flags = .maskCommand
+        down?.post(tap: .cghidEventTap)
+        up?.post(tap: .cghidEventTap)
+    }
+}

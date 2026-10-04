@@ -49,7 +49,7 @@ class StoreTestCase: XCTestCase {
     func saveText(_ text: String, in store: ClippaStore, app: String = "com.apple.Safari",
                   at date: Date = Date()) throws -> Item {
         try store.save(CapturedContent(kind: Classifier.kind(forText: text), text: text, identity: text,
-                                       representations: [CapturedRepresentation(index: 0, type: UTType.plainText, data: Data(text.utf8))],
+                                       representations: [CapturedRepresentation(index: 0, type: UTI.plainText, data: Data(text.utf8))],
                                        sourceBundleID: app, sourceAppName: app.components(separatedBy: ".").last),
                        at: date)
     }
@@ -75,7 +75,7 @@ final class StoreTests: StoreTestCase {
 
     func testSearchFindsPartsOfWordsAndShortTerms() throws {
         let store = try makeStore()
-        try saveText("Dalebotics robot rental", in: store)
+        try saveText("Robotics workshop rental", in: store)
         try saveText("Perché no", in: store, app: "com.apple.Notes")
         try saveText("ab cd", in: store)
 

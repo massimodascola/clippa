@@ -146,7 +146,7 @@ public struct Item: Identifiable, Hashable, Codable, Sendable {
 
     /// True when the content carries formatting (RTF or HTML).
     public var isRichText: Bool {
-        representations.contains { $0.type == UTType.rtf || $0.type == UTType.html || $0.type == UTType.rtfd }
+        representations.contains { $0.type == UTI.rtf || $0.type == UTI.html || $0.type == UTI.rtfd }
     }
 }
 
@@ -193,7 +193,7 @@ public struct Tombstone: Hashable, Codable, Sendable {
 
 /// Uniform type identifiers as strings, so ClippaCore does not depend on
 /// UniformTypeIdentifiers or AppKit.
-public enum UTType {
+public enum UTI {
     public static let plainText = "public.utf8-plain-text"
     public static let string = "NSStringPboardType"
     public static let rtf = "public.rtf"

@@ -154,8 +154,8 @@ public final class ClippaStore: @unchecked Sendable {
                 );
                 """)
                 // Trigram search finds any part of a word ("bot" finds
-                // "Dalebotics"). remove_diacritics needs SQLite 3.45
-                // (macOS 15); older systems get plain trigrams.
+                // "Robotics"). remove_diacritics needs SQLite 3.45 or
+                // later; older systems get plain trigrams.
                 let fts = "CREATE VIRTUAL TABLE IF NOT EXISTS items_fts USING fts5(title, text, ocr_text, link_title, source_app_name, content='items', content_rowid='seq', tokenize="
                 do {
                     try db.execute(fts + "'trigram remove_diacritics 1')")
@@ -412,7 +412,7 @@ public final class ClippaStore: @unchecked Sendable {
                             contentHash: contentHash, sourceBundleID: ClippaPaths.bundleID, sourceAppName: "Clippa",
                             deviceID: deviceID, deviceName: deviceName, pinboardID: pinboardID,
                             pinOrder: order - 1, inHistory: pinboardID == nil,
-                            representations: [Representation(index: 0, type: UTType.plainText, blob: hash, size: data.count)],
+                            representations: [Representation(index: 0, type: UTI.plainText, blob: hash, size: data.count)],
                             modifiedAt: now, modifiedBy: deviceID)
             try write(item)
             journal(.item(item), wasPinned: false)
