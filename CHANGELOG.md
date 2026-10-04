@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1 (2026-10-04)
+
+* New icon: a white C holding a copied card, on a pink-to-violet gradient, centered on its real outline.
+
 ## 1.2.0 (2026-10-04)
 
 * Opening Clippa by hand (from Applications, Spotlight or Launchpad) shows the shelf, like Paste; at login it stays in the menu bar. The shelf also appears right after the first-launch setup.
