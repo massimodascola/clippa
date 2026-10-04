@@ -73,7 +73,7 @@ Aggiorna nello stesso modo in cui hai installato. Cronologia, bacheche e imposta
 * **Homebrew**: `brew update && brew upgrade massimodascola/tap/clippa && clippa-install` (scrivi il nome della formula: `brew upgrade` da solo aggiorna tutti i pacchetti Homebrew del Mac).
 * **Dal codice sorgente**, nella cartella `clippa`: `git pull && sh build.sh --install`.
 
-Dopo un aggiornamento macOS può smettere di riconoscere il permesso Accessibilità (vedi [Tenere i permessi tra un aggiornamento e l'altro](#tenere-i-permessi-tra-un-aggiornamento-e-laltro)): togli Clippa dall'elenco Accessibilità con il pulsante −, poi consentila di nuovo.
+Dopo un aggiornamento macOS può smettere di riconoscere il permesso Accessibilità: togli Clippa dall'elenco Accessibilità con il pulsante −, poi consentila di nuovo. [Tenere i permessi tra un aggiornamento e l'altro](#tenere-i-permessi-tra-un-aggiornamento-e-laltro) spiega come evitarlo una volta per tutte.
 
 ### Disinstallare
 
@@ -152,7 +152,15 @@ Clippa sincronizza attraverso una cartella, `iCloud Drive/Clippa` di predefinito
 
 ## Tenere i permessi tra un aggiornamento e l'altro
 
-macOS lega il permesso Accessibilità alla firma esatta dell'app. Clippa viene firmata *ad hoc* dal Mac che la compila, quindi ogni nuova versione sembra un'app nuova e il permesso va concesso di nuovo. Per evitarlo, firma le tue build con un certificato stabile. Basta un Apple ID gratuito: in Xcode → Impostazioni → Account aggiungi il tuo Apple ID, poi Gestisci certificati → + → Apple Development. Poi compila con:
+macOS lega il permesso Accessibilità alla firma dell'app. Di predefinito Clippa viene firmata *ad hoc* dal Mac che la compila, quindi ogni nuova versione sembra un'app nuova e il permesso va concesso di nuovo. Per evitarlo, dai a ogni build la stessa firma. Il modo più semplice non richiede nessun account Apple; lancia una volta, nella cartella `clippa`:
+
+```sh
+sh tools/make-local-signing.sh
+```
+
+Crea un certificato autofirmato in un portachiavi separato dentro `~/Library/Application Support/Clippa/Signing` (non tocca il portachiavi di login, l'elenco dei portachiavi né le impostazioni di fiducia), e da lì `build.sh` lo usa da solo. Dopo la build successiva consenti Clippa in Accessibilità un'ultima volta; da quel momento gli aggiornamenti mantengono il permesso. Per tornare indietro cancella quella cartella. Il compromesso: un programma che gira con il tuo utente potrebbe usare quella chiave per firmarsi come Clippa, come per qualsiasi certificato da sviluppatore tenuto su un Mac.
+
+Se hai un certificato Apple Development (gratuito con un Apple ID in Xcode → Impostazioni → Account → Gestisci certificati), puoi usare quello:
 
 ```sh
 CLIPPA_SIGN_IDENTITY="Apple Development" sh build.sh --install
@@ -185,6 +193,7 @@ Per chi sviluppa:
 swift test                         # test di archivio, ricerca, conservazione, sincronizzazione e MCP
 swift tools/check-strings.swift    # ogni testo dell'interfaccia ha la sua traduzione italiana
 sh tools/make-icon.sh              # ridisegna l'icona da tools/draw-icon.swift
+sh tools/make-local-signing.sh     # stessa firma per ogni build (i permessi restano)
 ```
 
 ## Licenza

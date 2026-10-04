@@ -6,8 +6,10 @@
 # Signing: by default the app gets an ad hoc signature, enough to run on the
 # Mac that built it. macOS then ties the Accessibility permission to that
 # exact build, so after an update you allow Clippa again. To keep the
-# permission across updates, sign with a stable identity:
-#   CLIPPA_SIGN_IDENTITY="My Certificate" sh build.sh --install
+# permission across updates, give every build the same signature:
+#   sh tools/make-local-signing.sh      once, no Apple account needed
+# or sign with a certificate of your own:
+#   CLIPPA_SIGN_IDENTITY="Apple Development" sh build.sh --install
 # (see "Keeping permissions across updates" in the README).
 set -eu
 cd "$(dirname "$0")"
@@ -32,9 +34,24 @@ cp Resources/Clippa.icns "$APP/Contents/Resources/Clippa.icns"
 cp -R Resources/en.lproj Resources/it.lproj "$APP/Contents/Resources/"
 
 IDENTITY="${CLIPPA_SIGN_IDENTITY:--}"
-codesign --force --sign "$IDENTITY" --identifier com.massimodascola.clippa.mcp "$APP/Contents/MacOS/clippa-mcp"
-codesign --force --sign "$IDENTITY" "$APP"
-echo "Built: $APP"
+KEYCHAIN_ARGS=""
+SIGNING="$HOME/Library/Application Support/Clippa/Signing"
+if [ -z "${CLIPPA_SIGN_IDENTITY:-}" ] && [ -f "$SIGNING/signing.keychain-db" ]; then
+  # The certificate made by tools/make-local-signing.sh.
+  security unlock-keychain -p "$(cat "$SIGNING/keychain-password")" "$SIGNING/signing.keychain-db"
+  IDENTITY="Clippa Local Signing"
+  KEYCHAIN_ARGS="yes"
+fi
+sign() {
+  if [ -n "$KEYCHAIN_ARGS" ]; then
+    codesign --force --keychain "$SIGNING/signing.keychain-db" --sign "$IDENTITY" "$@"
+  else
+    codesign --force --sign "$IDENTITY" "$@"
+  fi
+}
+sign --identifier com.massimodascola.clippa.mcp "$APP/Contents/MacOS/clippa-mcp"
+sign "$APP"
+echo "Built: $APP (signed: $([ "$IDENTITY" = "-" ] && echo "ad hoc" || echo "$IDENTITY"))"
 
 case "${1:-}" in
   --install)

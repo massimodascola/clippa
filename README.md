@@ -73,7 +73,7 @@ Update the same way you installed it. Your history, pinboards and settings are k
 * **Homebrew**: `brew update && brew upgrade massimodascola/tap/clippa && clippa-install` (name the formula: `brew upgrade` alone updates every Homebrew package on your Mac).
 * **From source**, in the `clippa` folder: `git pull && sh build.sh --install`.
 
-After an update, macOS may stop honoring the Accessibility permission (see [Keeping permissions across updates](#keeping-permissions-across-updates)): remove Clippa from the Accessibility list with the − button, then allow it again.
+After an update, macOS may stop honoring the Accessibility permission: remove Clippa from the Accessibility list with the − button, then allow it again. [Keeping permissions across updates](#keeping-permissions-across-updates) explains how to avoid it for good.
 
 ### Uninstall
 
@@ -152,7 +152,15 @@ Clippa syncs through a folder, `iCloud Drive/Clippa` by default (any synced fold
 
 ## Keeping permissions across updates
 
-macOS ties the Accessibility permission to the exact signature of the app. Clippa is signed *ad hoc* by the Mac that builds it, so every new build looks like a new app and the permission has to be granted again. To avoid that, sign your builds with a stable certificate. A free Apple ID is enough: in Xcode → Settings → Accounts, add your Apple ID, then Manage Certificates → + → Apple Development. Then build with:
+macOS ties the Accessibility permission to the signature of the app. By default Clippa is signed *ad hoc* by the Mac that builds it, so every new build looks like a new app and the permission has to be granted again. To avoid that, give every build the same signature. The simplest way needs no Apple account; run once, in the `clippa` folder:
+
+```sh
+sh tools/make-local-signing.sh
+```
+
+It creates a self-signed certificate in a separate keychain inside `~/Library/Application Support/Clippa/Signing` (your login keychain, keychain list and trust settings are not touched), and `build.sh` then uses it by itself. Allow Clippa in Accessibility once more after the next build; from then on updates keep the permission. To undo, delete that folder. Trade-off: a program running as you could use that key to sign itself as Clippa, as with any developer certificate kept on a Mac.
+
+If you have an Apple Development certificate (free with an Apple ID in Xcode → Settings → Accounts → Manage Certificates), you can use it instead:
 
 ```sh
 CLIPPA_SIGN_IDENTITY="Apple Development" sh build.sh --install
@@ -185,6 +193,7 @@ For developers:
 swift test                         # storage, search, retention, sync and MCP tests
 swift tools/check-strings.swift    # every interface text has its Italian translation
 sh tools/make-icon.sh              # redraws the icon from tools/draw-icon.swift
+sh tools/make-local-signing.sh     # same signature for every build (keeps permissions)
 ```
 
 ## License

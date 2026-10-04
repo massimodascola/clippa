@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3 (2026-10-04)
+
+* `tools/make-local-signing.sh` creates a local signing certificate (no Apple account needed) that `build.sh` uses by itself, so macOS keeps the Accessibility permission across updates.
+
 ## 1.2.2 (2026-10-04)
 
 * Icon centering reworked from measurements: the C is a little more closed and its circle and card sit together, slightly right of center, so no reference (outline, mass, circle, card) is more than 22 points off on a 1024-point canvas.
