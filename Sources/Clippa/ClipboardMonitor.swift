@@ -11,14 +11,24 @@ final class ClipboardMonitor {
     private let pasteboard = NSPasteboard.general
     private var lastChangeCount: Int
     private var timer: Timer?
-    private let onCapture: (CapturedContent) -> Void
+    private let onCapture: (RawCapture) -> Void
 
     /// Formats bigger than this are not saved (the others of the same copy are).
     private let maxRepresentationSize = 30 * 1024 * 1024
     /// Above this a whole copy keeps only its main formats.
-    private let maxTotalSize = 60 * 1024 * 1024
+    nonisolated static let maxTotalSize = 60 * 1024 * 1024
 
-    init(onCapture: @escaping (CapturedContent) -> Void) {
+    /// What was read from the clipboard, before the slow work (thumbnails,
+    /// image conversion), which `process` does off the main thread.
+    struct RawCapture: Sendable {
+        var representations: [CapturedRepresentation]
+        var text: String
+        var fileURLs: [URL]
+        var sourceID: String?
+        var sourceName: String?
+    }
+
+    init(onCapture: @escaping (RawCapture) -> Void) {
         self.onCapture = onCapture
         lastChangeCount = pasteboard.changeCount
     }
@@ -49,7 +59,7 @@ final class ClipboardMonitor {
 
     /// Reads the clipboard now, applying the privacy rules. Returns nil when
     /// the copy must be ignored.
-    private func read() -> CapturedContent? {
+    private func read() -> RawCapture? {
         guard let items = pasteboard.pasteboardItems, !items.isEmpty else { return nil }
         let allTypes = Set(items.flatMap { $0.types.map(\.rawValue) })
 
@@ -82,8 +92,19 @@ final class ClipboardMonitor {
         guard !representations.isEmpty else { return nil }
 
         let fileURLs = items.compactMap { $0.string(forType: .fileURL).flatMap(URL.init(string:)) }
+        // HTML parsing must happen on the main thread, so the text is read here.
         let text = pasteboard.string(forType: .string) ?? Self.textFromFormatted(representations) ?? ""
-        let imageRep = Self.preferredImage(in: representations)
+        return RawCapture(representations: representations, text: text, fileURLs: fileURLs,
+                          sourceID: sourceID, sourceName: sourceName)
+    }
+
+    /// Turns a raw copy into an item: kind, thumbnail, image size. Runs in
+    /// the background. Returns nil when there is nothing worth saving.
+    nonisolated static func process(_ raw: RawCapture) -> CapturedContent? {
+        let representations = raw.representations
+        let text = raw.text
+        let fileURLs = raw.fileURLs
+        let imageRep = preferredImage(in: representations)
 
         var content: CapturedContent
         if !fileURLs.isEmpty {
@@ -117,8 +138,8 @@ final class ClipboardMonitor {
                                       identity: shown, representations: representations)
         }
         content.representations = trimmed(content.representations)
-        content.sourceBundleID = sourceID
-        content.sourceAppName = sourceName
+        content.sourceBundleID = raw.sourceID
+        content.sourceAppName = raw.sourceName
         return content
     }
 
@@ -136,7 +157,7 @@ final class ClipboardMonitor {
     }
 
     /// The image format worth keeping as "the" image of a copy.
-    static func preferredImage(in reps: [CapturedRepresentation]) -> CapturedRepresentation? {
+    nonisolated static func preferredImage(in reps: [CapturedRepresentation]) -> CapturedRepresentation? {
         for type in [UTI.png, UTI.tiff, UTI.jpeg, UTI.heic, "public.webp", "com.compuserve.gif"] {
             if let rep = reps.first(where: { $0.type == type }) { return rep }
         }
@@ -145,7 +166,7 @@ final class ClipboardMonitor {
 
     /// Keeps the total size reasonable: when a copy is huge, drop the
     /// heaviest secondary formats first (apps like Office put many).
-    private func trimmed(_ reps: [CapturedRepresentation]) -> [CapturedRepresentation] {
+    nonisolated private static func trimmed(_ reps: [CapturedRepresentation]) -> [CapturedRepresentation] {
         var total = reps.reduce(0) { $0 + $1.data.count }
         guard total > maxTotalSize else { return reps }
         let essential: Set<String> = [UTI.plainText, UTI.rtf, UTI.html, UTI.fileURL, UTI.png, UTI.url]

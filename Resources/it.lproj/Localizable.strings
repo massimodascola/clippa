@@ -169,6 +169,7 @@
 "Quick Paste (1–9)" = "Incolla rapido (1–9)";
 "Plain text mode" = "Testo semplice";
 "Restore Defaults" = "Ripristina predefinite";
+"Another app is already using one of these shortcuts. Quit that app or choose a different shortcut." = "Un'altra app usa già una di queste scorciatoie. Chiudi quell'app o scegli un'altra scorciatoia.";
 "In the shelf" = "Nello scaffale";
 "Select previous or next item" = "Seleziona l'elemento precedente o successivo";
 "Extend the selection" = "Estendi la selezione";

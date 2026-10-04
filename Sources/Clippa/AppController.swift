@@ -48,14 +48,15 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         sync = SyncCoordinator(store: store)
         sync.onImport = { [weak self] in self?.shelf.externalChange() }
 
-        monitor = ClipboardMonitor { [weak self] content in self?.save(content) }
+        monitor = ClipboardMonitor { [weak self] raw in self?.save(raw) }
         monitor.start()
 
         registerHotKeys()
         updateStatusItem()
         sync.configure()
         runHousekeeping()
-        let timer = Timer(timeInterval: 3_600, repeats: true) { [weak self] _ in
+        // Every 5 minutes, so "delete after 1 hour" is on time.
+        let timer = Timer(timeInterval: 300, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.runHousekeeping() }
         }
         RunLoop.main.add(timer, forMode: .common)
@@ -85,12 +86,22 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: - Capture
 
-    private func save(_ content: CapturedContent) {
-        guard let item = try? store.save(content) else { return }
-        enricher.process(item)
-        stack.add(item)
-        shelf.externalChange()
-        sync.scheduleSoon()
+    /// Thumbnails and the database write happen on a serial queue, so a big
+    /// image never freezes the interface and copies keep their order.
+    private let saveQueue = DispatchQueue(label: "clippa.save", qos: .userInitiated)
+
+    private func save(_ raw: ClipboardMonitor.RawCapture) {
+        let store = store!
+        saveQueue.async { [weak self] in
+            guard let content = ClipboardMonitor.process(raw), let item = try? store.save(content) else { return }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.enricher.process(item)
+                self.stack.add(item)
+                self.shelf.externalChange()
+                self.sync.scheduleSoon()
+            }
+        }
     }
 
     func storeDidChange() {
@@ -110,13 +121,19 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: - Hotkeys
 
+    /// False when macOS refused the shortcut (another app already uses it).
+    private(set) var activateShortcutWorks = true
+    private(set) var stackShortcutWorks = true
+
     func registerHotKeys() {
-        HotKeyCenter.shared.register(id: HotKey.activate.rawValue,
-                                     shortcut: Shortcut.load(Pref.activateShortcut, default: .activateDefault)) { [weak self] in
+        activateShortcutWorks = HotKeyCenter.shared.register(
+            id: HotKey.activate.rawValue, shortcut: Shortcut.load(Pref.activateShortcut, default: .activateDefault)
+        ) { [weak self] in
             self?.shelf.toggle()
         }
-        HotKeyCenter.shared.register(id: HotKey.stack.rawValue,
-                                     shortcut: Shortcut.load(Pref.stackShortcut, default: .stackDefault)) { [weak self] in
+        stackShortcutWorks = HotKeyCenter.shared.register(
+            id: HotKey.stack.rawValue, shortcut: Shortcut.load(Pref.stackShortcut, default: .stackDefault)
+        ) { [weak self] in
             self?.stack.toggle()
         }
     }

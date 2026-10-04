@@ -218,6 +218,11 @@ struct ShortcutSettings: View {
     @AppStorage(Pref.plainTextModifier) private var plainModifier = ModifierChoice.shift.rawValue
     @State private var activate = Shortcut.load(Pref.activateShortcut, default: .activateDefault)
     @State private var stack = Shortcut.load(Pref.stackShortcut, default: .stackDefault)
+    @State private var shortcutsWork = true
+
+    private func refresh() {
+        shortcutsWork = app.activateShortcutWorks && app.stackShortcutWorks
+    }
 
     var body: some View {
         Form {
@@ -226,13 +231,19 @@ struct ShortcutSettings: View {
                     ShortcutRecorder(shortcut: $activate) { value in
                         Shortcut.save(value, key: Pref.activateShortcut)
                         app.registerHotKeys()
+                        refresh()
                     }
                 }
                 LabeledContent(L("Paste Stack")) {
                     ShortcutRecorder(shortcut: $stack) { value in
                         Shortcut.save(value, key: Pref.stackShortcut)
                         app.registerHotKeys()
+                        refresh()
                     }
+                }
+                if !shortcutsWork {
+                    Text(L("Another app is already using one of these shortcuts. Quit that app or choose a different shortcut."))
+                        .font(.caption).foregroundStyle(.orange)
                 }
                 Picker(L("Quick Paste (1–9)"), selection: $quickModifier) {
                     ForEach(ModifierChoice.allCases, id: \.rawValue) { Text("\($0.symbol) 1…9").tag($0.rawValue) }
@@ -250,9 +261,11 @@ struct ShortcutSettings: View {
                         quickModifier = ModifierChoice.command.rawValue
                         plainModifier = ModifierChoice.shift.rawValue
                         app.registerHotKeys()
+                        refresh()
                     }
                 }
             }
+            .onAppear(perform: refresh)
             Section(L("In the shelf")) {
                 shortcutRow("← →", L("Select previous or next item"))
                 shortcutRow("⇧← ⇧→", L("Extend the selection"))
