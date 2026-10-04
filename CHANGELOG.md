@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2 (2026-10-04)
+
+* Icon centering reworked from measurements: the C is a little more closed and its circle and card sit together, slightly right of center, so no reference (outline, mass, circle, card) is more than 22 points off on a 1024-point canvas.
+
 ## 1.2.1 (2026-10-04)
 
 * New icon: a white C holding a copied card, on a pink-to-violet gradient, centered on its real outline.
