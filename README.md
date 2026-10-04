@@ -159,7 +159,7 @@ CLIPPA_SIGN_IDENTITY="Apple Development" sh build.sh --install
 
 ## Compatibility
 
-* **macOS 27**: tested on macOS 27.0.1 (MacBook Pro with Apple Silicon, built-in and external display).
+* **macOS 27**: developed on macOS 27.0.1 (MacBook Pro with Apple Silicon, built-in and external display).
 * **macOS 14 to 26**: should work (the code checks every newer API), but it is **not tested**. Please open an issue if you try it, even just to say it works.
 * Apple Silicon and Intel: `build.sh` builds for the Mac it runs on.
 * **iPhone and iPad**: not available. The storage, search, retention and sync code (`ClippaCore`) uses only Foundation and SQLite, so an iOS app can be added on top of it later.

@@ -159,7 +159,7 @@ CLIPPA_SIGN_IDENTITY="Apple Development" sh build.sh --install
 
 ## Compatibilità
 
-* **macOS 27**: provata su macOS 27.0.1 (MacBook Pro con Apple Silicon, schermo interno ed esterno).
+* **macOS 27**: sviluppata su macOS 27.0.1 (MacBook Pro con Apple Silicon, schermo interno ed esterno).
 * **Da macOS 14 a 26**: dovrebbe funzionare (il codice controlla ogni API più recente), ma **non è provata**. Se la provi, apri una issue, anche solo per dire che funziona.
 * Apple Silicon e Intel: `build.sh` compila per il Mac su cui gira.
 * **iPhone e iPad**: non disponibili. Il codice di archivio, ricerca, conservazione e sincronizzazione (`ClippaCore`) usa solo Foundation e SQLite, quindi in futuro ci si può costruire sopra un'app iOS.
