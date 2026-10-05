@@ -1,6 +1,9 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 5.9
 // Clippa is built with SwiftPM plus build.sh, which wraps the binaries into
 // Clippa.app. No Xcode project is needed.
+//
+// Tools version 5.9 (Xcode 15) on purpose: older Command Line Tools can read
+// this manifest, and the code is compiled in the Swift 5 language mode.
 import PackageDescription
 
 let package = Package(
@@ -26,6 +29,5 @@ let package = Package(
         // The macOS app.
         .executableTarget(name: "Clippa", dependencies: ["ClippaCore", "ClippaPasteboard"]),
         .testTarget(name: "ClippaCoreTests", dependencies: ["ClippaCore", "ClippaMCP"]),
-    ],
-    swiftLanguageModes: [.v5]
+    ]
 )

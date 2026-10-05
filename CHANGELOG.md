@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.4 (2026-10-05)
+
+* Builds with older developer tools: the package manifest now needs Swift 5.9 (Xcode 15 or its Command Line Tools) instead of a recent Swift 6, and the macOS 15.4 clipboard-permission check no longer needs the macOS 15.4 SDK. Reported by a user whose Command Line Tools could not read `swiftLanguageModes`.
+* install.sh checks the Swift version first and explains what to update when the build fails.
+
 ## 1.2.3 (2026-10-04)
 
 * `tools/make-local-signing.sh` creates a local signing certificate (no Apple account needed) that `build.sh` uses by itself, so macOS keeps the Accessibility permission across updates.

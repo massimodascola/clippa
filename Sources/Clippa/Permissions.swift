@@ -25,13 +25,17 @@ enum Permissions {
     }
 
     static var clipboardAccess: ClipboardAccess {
-        guard #available(macOS 15.4, *) else { return .allowed }
-        switch NSPasteboard.general.accessBehavior {
-        case .alwaysAllow: return .allowed
-        case .alwaysDeny: return .denied
-        case .ask: return .notAskedYet
-        case .default: return .notAskedYet
-        @unknown default: return .unknown
+        // NSPasteboard.accessBehavior (macOS 15.4) is read by name, so Clippa
+        // also builds with older SDKs. Values: 0 default, 1 ask,
+        // 2 always allow, 3 always deny.
+        guard #available(macOS 15.4, *),
+              NSPasteboard.general.responds(to: NSSelectorFromString("accessBehavior")),
+              let value = NSPasteboard.general.value(forKey: "accessBehavior") as? Int else { return .allowed }
+        switch value {
+        case 2: return .allowed
+        case 3: return .denied
+        case 0, 1: return .notAskedYet
+        default: return .unknown
         }
     }
 

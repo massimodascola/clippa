@@ -27,7 +27,7 @@ The app is in English, with an Italian translation that macOS picks automaticall
 
 ## Install
 
-You need macOS 14 Sonoma or later and Apple's developer tools. If you don't have them, install them for free with `xcode-select --install`.
+You need macOS 14 Sonoma or later and Apple's developer tools with Swift 5.9 or later (Xcode 15, or its Command Line Tools). If you don't have them, install them for free with `xcode-select --install`; if they are old, update them in System Settings → General → Software Update.
 
 Three ways, pick one. All of them build Clippa on your own Mac, so no Apple signature is needed and no security warning shows up.
 
