@@ -27,7 +27,7 @@ L'app è in inglese, con una traduzione italiana che macOS sceglie da solo quand
 
 ## Installazione
 
-Servono macOS 14 Sonoma o successivi e gli strumenti per sviluppatori di Apple con Swift 5.9 o successivo (Xcode 15, o i suoi Command Line Tools). Se non li hai, installali gratis con `xcode-select --install`; se sono vecchi, aggiornali in Impostazioni di Sistema → Generali → Aggiornamento software.
+Servono macOS 14 Sonoma o successivi e gli strumenti per sviluppatori di Apple con Swift 5.9 o successivo (Xcode 15, o i suoi Command Line Tools; con i soli Command Line Tools su macOS 27, `build.sh` usa l'SDK di macOS precedente che includono, perché il più recente richiede Xcode per SwiftUI). Se non li hai, installali gratis con `xcode-select --install`; se sono vecchi, aggiornali in Impostazioni di Sistema → Generali → Aggiornamento software.
 
 Tre strade, scegline una. Tutte compilano Clippa sul tuo Mac, quindi non serve una firma Apple e non compare nessun avviso di sicurezza.
 
@@ -190,6 +190,7 @@ CLIPPA_SIGN_IDENTITY="Apple Development" sh build.sh --install
 Per chi sviluppa:
 
 ```sh
+sh build.sh                        # crea build/Clippa.app con swiftc (non serve SwiftPM)
 swift test                         # test di archivio, ricerca, conservazione, sincronizzazione e MCP
 swift tools/check-strings.swift    # ogni testo dell'interfaccia ha la sua traduzione italiana
 sh tools/make-icon.sh              # ridisegna l'icona da tools/draw-icon.swift

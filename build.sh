@@ -14,21 +14,71 @@
 set -eu
 cd "$(dirname "$0")"
 
-# CLIPPA_SWIFT_FLAGS passes extra options to SwiftPM (Homebrew uses
-# --disable-sandbox, since it already builds inside its own sandbox).
-FLAGS="${CLIPPA_SWIFT_FLAGS:-}"
-# shellcheck disable=SC2086
-swift build -c release $FLAGS --product Clippa
-# shellcheck disable=SC2086
-swift build -c release $FLAGS --product clippa-mcp
-# shellcheck disable=SC2086
-BIN=$(swift build -c release $FLAGS --show-bin-path)
-
+# The Swift compiler is called directly, module by module, without Swift
+# Package Manager: it builds the same code as Package.swift (which stays for
+# development and `swift test`), and works even where SwiftPM's own files are
+# broken, e.g. after a half-finished Command Line Tools update.
+OBJ=build/obj
 APP=build/Clippa.app
-rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$BIN/Clippa" "$APP/Contents/MacOS/Clippa"
-cp "$BIN/clippa-mcp" "$APP/Contents/MacOS/clippa-mcp"
+rm -rf "$OBJ" "$APP"
+mkdir -p "$OBJ" "$APP/Contents/MacOS" "$APP/Contents/Resources"
+
+TARGET="$(uname -m)-apple-macos14.0"
+
+# Pick an SDK this toolchain can really build SwiftUI code with. In the
+# macOS 27 SDK @State is a macro, and Apple's Command Line Tools (without
+# Xcode) lack its plugin; they also ship the previous SDK, which works, and
+# Clippa needs nothing newer.
+cat > "$OBJ/probe.swift" <<'SWIFT'
+import SwiftUI
+struct Probe: View {
+    @State private var value = 0
+    var body: some View { Text("\(value)") }
+}
+SWIFT
+usable() {
+  xcrun swiftc -typecheck -target "$TARGET" -sdk "$1" -module-cache-path "$OBJ/module-cache" \
+    "$OBJ/probe.swift" >/dev/null 2>&1
+}
+SDK=$(xcrun --show-sdk-path)
+if ! usable "$SDK"; then
+  FOUND=""
+  for candidate in $(ls -d "$(dirname "$SDK")"/MacOSX[0-9]*.sdk 2>/dev/null | sort -r); do
+    if [ "$candidate" != "$SDK" ] && usable "$candidate"; then
+      FOUND="$candidate"
+      break
+    fi
+  done
+  if [ -z "$FOUND" ]; then
+    echo "These developer tools cannot build SwiftUI apps with $(basename "$SDK")." >&2
+    echo "Install Xcode (free, from the App Store), or update the Command Line Tools in" >&2
+    echo "System Settings > General > Software Update, then run this again." >&2
+    exit 1
+  fi
+  echo "Using $(basename "$FOUND"): $(basename "$SDK") needs Xcode to build SwiftUI apps."
+  SDK="$FOUND"
+fi
+swiftc() {
+  xcrun swiftc -O -wmo -swift-version 5 -target "$TARGET" -sdk "$SDK" \
+    -module-cache-path "$OBJ/module-cache" -I "$OBJ" -L "$OBJ" "$@"
+}
+# A static library and its module interface, for each library target.
+library() {
+  name=$1
+  shift
+  swiftc -parse-as-library -emit-library -static -module-name "$name" \
+    -emit-module -emit-module-path "$OBJ/$name.swiftmodule" -o "$OBJ/lib$name.a" "$@"
+}
+
+echo "Compiling with $(xcrun swiftc --version 2>/dev/null | head -n 1)"
+library ClippaCore Sources/ClippaCore/*.swift
+library ClippaPasteboard Sources/ClippaPasteboard/*.swift
+library ClippaMCP Sources/ClippaMCP/*.swift
+swiftc -module-name Clippa -lClippaPasteboard -lClippaCore \
+  Sources/Clippa/*.swift -o "$APP/Contents/MacOS/Clippa"
+swiftc -module-name clippa_mcp -lClippaMCP -lClippaPasteboard -lClippaCore \
+  Sources/clippa-mcp/main.swift -o "$APP/Contents/MacOS/clippa-mcp"
+
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/Clippa.icns "$APP/Contents/Resources/Clippa.icns"
 cp -R Resources/en.lproj Resources/it.lproj "$APP/Contents/Resources/"

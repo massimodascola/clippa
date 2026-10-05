@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.5 (2026-10-05)
+
+* build.sh calls the Swift compiler directly instead of Swift Package Manager, so Clippa builds even where SwiftPM's own files are broken (a user's Command Line Tools failed to link the package manifest). Package.swift stays for development and tests.
+* With Apple's Command Line Tools alone, the macOS 27 SDK cannot build SwiftUI's `@State` (its macro plugin ships only with Xcode): build.sh checks the SDK and falls back to the previous one included with the tools.
+
 ## 1.2.4 (2026-10-05)
 
 * Builds with older developer tools: the package manifest now needs Swift 5.9 (Xcode 15 or its Command Line Tools) instead of a recent Swift 6, and the macOS 15.4 clipboard-permission check no longer needs the macOS 15.4 SDK. Reported by a user whose Command Line Tools could not read `swiftLanguageModes`.
