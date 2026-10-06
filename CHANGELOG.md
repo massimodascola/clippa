@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.1 (2026-10-06)
+
+* New icon: ⌘C in white inside a key with a pink-to-violet outline, on graphite. The ⌘ sign and the C are drawn as paths, and the ⌘C group is centered in the key from its measured outline.
+* "Hold ⌘V to open Clippa" starts by itself as soon as the Accessibility permission is granted.
+
 ## 1.3.0 (2026-10-06)
 
 * Hold ⌘V to open Clippa (Settings → Shortcuts, off by default): a quick ⌘V still pastes, holding it opens the shelf. It starts by itself as soon as the Accessibility permission is granted.
