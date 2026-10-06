@@ -74,6 +74,16 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return self.shelf.isVisible || self.stack.isActive
         }
         updateHoldCommandV()
+        // If the Accessibility permission arrives while Clippa is running,
+        // start watching ⌘V without waiting for a relaunch.
+        let retry = Timer(timeInterval: 3, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, UserDefaults.standard.bool(forKey: Pref.holdCommandV),
+                      !self.holdCommandV.isRunning, Permissions.canPaste else { return }
+                self.updateHoldCommandV()
+            }
+        }
+        RunLoop.main.add(retry, forMode: .common)
         updateStatusItem()
         sync.configure()
         runHousekeeping()

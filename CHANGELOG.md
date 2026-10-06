@@ -2,7 +2,7 @@
 
 ## 1.3.0 (2026-10-06)
 
-* Hold ⌘V to open Clippa (Settings → Shortcuts, off by default): a quick ⌘V still pastes, holding it opens the shelf.
+* Hold ⌘V to open Clippa (Settings → Shortcuts, off by default): a quick ⌘V still pastes, holding it opens the shelf. It starts by itself as soon as the Accessibility permission is granted.
 * Selecting several items shows a bar to paste, pin or delete them together; the right-click menu says how many items it deletes, and deleting 10 or more asks first.
 * Closing the shelf while a confirmation is open now cancels it, and Escape cancels a confirmation instead of closing the shelf (this also fixes "Delete Pinboard…").
 * The ⌘V that Clippa sends is marked as its own, so Paste Stack no longer swaps it for a stack item.
