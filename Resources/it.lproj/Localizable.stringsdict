@@ -99,5 +99,53 @@
 			<string>Verranno eliminati anche i suoi %lld elementi. L'operazione non si può annullare.</string>
 		</dict>
 	</dict>
+	<key>%lld selected</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld selezionato</string>
+			<key>other</key>
+			<string>%lld selezionati</string>
+		</dict>
+	</dict>
+	<key>Delete %lld items?</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>Eliminare %lld elemento?</string>
+			<key>other</key>
+			<string>Eliminare %lld elementi?</string>
+		</dict>
+	</dict>
+	<key>Delete %lld Items</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>Elimina %lld elemento</string>
+			<key>other</key>
+			<string>Elimina %lld elementi</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

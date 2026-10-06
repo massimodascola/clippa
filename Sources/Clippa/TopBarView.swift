@@ -329,6 +329,7 @@ struct MoreMenu: View {
         Menu {
             Button(L("New Text Item")) { model.createTextItem() }
             Button(L("New Pinboard")) { model.creatingPinboard = true }
+            Button(L("Select All (⌘A)")) { model.selectAll() }
             Divider()
             Button(L("Paste Stack")) { model.controller?.startPasteStack() }
             Button(L("Pause Clippa for 1 Hour")) { model.controller?.pause() }

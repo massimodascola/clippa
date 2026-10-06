@@ -86,6 +86,14 @@ struct ShelfView: View {
             emptyState
         } else {
             CardStripView(model: model)
+                .overlay(alignment: .bottom) {
+                    if model.selection.count > 1 {
+                        SelectionBar(model: model)
+                            .padding(.bottom, model.compact ? 4 : 8)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
+                .animation(.easeOut(duration: 0.15), value: model.selection.count > 1)
         }
     }
 
@@ -218,5 +226,48 @@ struct ResizeHandle: NSViewRepresentable {
                 model?.controller?.resize(toTop: NSEvent.mouseLocation.y)
             }
         }
+    }
+}
+
+/// Shown when several cards are selected (⌘-click, ⇧-click, ⇧← ⇧→ or ⌘A):
+/// what can be done to all of them at once.
+struct SelectionBar: View {
+    @Bindable var model: ShelfModel
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Text(L("%lld selected", model.selection.count))
+                .font(.system(size: 12, weight: .semibold))
+            Divider().frame(height: 16)
+            Button { model.pasteSelection(plainText: false) } label: {
+                Label(L("Paste"), systemImage: "arrow.down.doc")
+            }
+            Menu {
+                ForEach(model.pinboards) { pinboard in
+                    Button(pinboard.name) { model.pin(model.selectedItemsInOrder.map(\.id), to: pinboard.id) }
+                }
+                if !model.pinboards.isEmpty { Divider() }
+                Button(L("New Pinboard…")) { model.creatingPinboard = true }
+            } label: {
+                Label(L("Pin"), systemImage: "pin")
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            Button(role: .destructive) { model.deleteSelection() } label: {
+                Label(L("Delete"), systemImage: "trash")
+            }
+            .foregroundStyle(.red)
+            Button { model.selection = Array(model.selection.suffix(1)) } label: {
+                Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+            }
+            .help(L("Deselect"))
+        }
+        .buttonStyle(.plain)
+        .font(.system(size: 12, weight: .medium))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(.regularMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.1)))
+        .shadow(color: .black.opacity(0.25), radius: 8, y: 2)
     }
 }

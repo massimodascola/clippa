@@ -96,6 +96,10 @@ final class ShelfController: NSObject, NSWindowDelegate {
 
     func hide(animated: Bool = true) {
         guard isVisible else { return }
+        // A confirmation still open on the shelf counts as "Cancel".
+        if let sheet = panel.attachedSheet {
+            panel.endSheet(sheet, returnCode: .cancel)
+        }
         isVisible = false
         removeKeyMonitor()
         preview.close()
@@ -158,10 +162,11 @@ final class ShelfController: NSObject, NSWindowDelegate {
     nonisolated func windowDidResignKey(_ notification: Notification) {
         MainActor.assumeIsolated {
             // Closing when the user clicks elsewhere, but not when one of our
-            // own panels (editor, preview) takes the keyboard.
+            // own windows takes the keyboard: the editor, or a confirmation
+            // sheet attached to the shelf.
             DispatchQueue.main.async {
-                guard self.isVisible, !self.panel.isKeyWindow else { return }
-                if let key = NSApp.keyWindow, key === self.editor.panel { return }
+                guard self.isVisible, !self.panel.isKeyWindow, self.panel.attachedSheet == nil else { return }
+                if let key = NSApp.keyWindow, key === self.editor.panel || key.sheetParent === self.panel { return }
                 self.hide()
             }
         }
@@ -299,6 +304,9 @@ final class ShelfController: NSObject, NSWindowDelegate {
 
     /// Returns true when the event was used.
     func handle(_ event: NSEvent) -> Bool {
+        // While a confirmation is open on the shelf, every key is its own:
+        // Escape cancels it instead of closing the shelf.
+        if panel.attachedSheet != nil { return false }
         let flags = event.modifierFlags.intersection([.command, .shift, .option, .control])
         let quick = Pref.quickPasteFlags
         let plain = Pref.plainTextFlags

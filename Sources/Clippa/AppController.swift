@@ -13,6 +13,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var enricher: Enricher!
     private(set) var shelf: ShelfController!
     private(set) var stack: PasteStack!
+    let holdCommandV = HoldCommandV()
     private(set) var sync: SyncCoordinator!
     private var statusItem: NSStatusItem?
     private var housekeeping: Timer?
@@ -67,6 +68,12 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         monitor.start()
 
         registerHotKeys()
+        holdCommandV.onHold = { [weak self] in self?.shelf.show() }
+        holdCommandV.shouldIgnore = { [weak self] in
+            guard let self else { return true }
+            return self.shelf.isVisible || self.stack.isActive
+        }
+        updateHoldCommandV()
         updateStatusItem()
         sync.configure()
         runHousekeeping()
@@ -142,6 +149,13 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// False when macOS refused the shortcut (another app already uses it).
     private(set) var activateShortcutWorks = true
     private(set) var stackShortcutWorks = true
+
+    /// Turns "Hold ⌘V to open Clippa" on or off as in Settings. Returns
+    /// false when it is on but macOS refused (no Accessibility permission).
+    @discardableResult
+    func updateHoldCommandV() -> Bool {
+        holdCommandV.setEnabled(UserDefaults.standard.bool(forKey: Pref.holdCommandV))
+    }
 
     func registerHotKeys() {
         activateShortcutWorks = HotKeyCenter.shared.register(
@@ -305,6 +319,22 @@ extension ShelfController {
     func startPasteStack() {
         hide()
         AppController.shared?.stack.start()
+    }
+
+    func confirmDelete(count: Int, then delete: @escaping () -> Void) {
+        let alert = NSAlert()
+        alert.messageText = L("Delete %lld items?", count)
+        alert.informativeText = L("You can undo with ⌘Z while Clippa stays open.")
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: L("Delete"))
+        alert.addButton(withTitle: L("Cancel"))
+        alert.buttons.first?.hasDestructiveAction = true
+        alert.beginSheetModal(for: panel) { [weak self] response in
+            MainActor.assumeIsolated {
+                if response == .alertFirstButtonReturn { delete() }
+                self?.panel.makeKey()
+            }
+        }
     }
 
     func confirmDeletePinboard(_ pinboard: Pinboard) {

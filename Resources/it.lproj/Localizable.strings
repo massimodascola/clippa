@@ -176,6 +176,12 @@
 "Quick Paste (1–9)" = "Incolla rapido (1–9)";
 "Plain text mode" = "Testo semplice";
 "Restore Defaults" = "Ripristina predefinite";
+"Hold ⌘V to open Clippa" = "Tieni premuto ⌘V per aprire Clippa";
+"A quick ⌘V pastes as usual; hold it for half a second to open Clippa instead. Pasting waits for the key to come up, a fraction of a second later than usual." = "Un ⌘V veloce incolla come sempre; tienilo premuto mezzo secondo per aprire Clippa. L'incolla avviene quando rilasci il tasto, una frazione di secondo dopo il solito.";
+"Needed to tell a quick ⌘V from a held one." = "Serve per distinguere un ⌘V veloce da uno tenuto premuto.";
+"You can undo with ⌘Z while Clippa stays open." = "Puoi annullare con ⌘Z finché Clippa resta aperta.";
+"Select All (⌘A)" = "Seleziona tutto (⌘A)";
+"Deselect" = "Deseleziona";
 "Another app is already using one of these shortcuts. Quit that app or choose a different shortcut." = "Un'altra app usa già una di queste scorciatoie. Chiudi quell'app o scegli un'altra scorciatoia.";
 "In the shelf" = "Nello scaffale";
 "Select previous or next item" = "Seleziona l'elemento precedente o successivo";

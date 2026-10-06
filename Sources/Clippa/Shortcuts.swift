@@ -93,10 +93,24 @@ enum KeyboardLayout {
         return nil
     }
 
-    /// The V of Command-V, wherever it is on this keyboard.
+    /// The V of Command-V, wherever it is on this keyboard. Cached, since
+    /// the event taps check it for every key press; refreshed when the
+    /// keyboard layout changes.
     static var vKeyCode: CGKeyCode {
-        keyCode(for: "v") ?? CGKeyCode(kVK_ANSI_V)
+        if let cachedV { return cachedV }
+        if !observingLayout {
+            observingLayout = true
+            DistributedNotificationCenter.default().addObserver(
+                forName: NSNotification.Name("com.apple.Carbon.TISNotifySelectedKeyboardInputSourceChanged"),
+                object: nil, queue: .main) { _ in cachedV = nil }
+        }
+        let code = keyCode(for: "v") ?? CGKeyCode(kVK_ANSI_V)
+        cachedV = code
+        return code
     }
+
+    private static var cachedV: CGKeyCode?
+    private static var observingLayout = false
 }
 
 /// Global hotkeys through the Carbon API: no permission needed.

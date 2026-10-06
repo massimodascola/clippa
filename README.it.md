@@ -16,6 +16,8 @@ Clippa è un progetto indipendente, non collegato a Paste né ai suoi autori.
 * **Bacheche**: raccolte con nome e colore per quello che riusi. Gli elementi in bacheca non scadono mai.
 * **Incolla direttamente nell'app che stai usando**, oppure come testo semplice, o più elementi insieme. **Incolla rapido** con ⌘1…⌘9.
 * **Incolla in sequenza** (⇧⌘C): copi più cose, poi le incolli una alla volta, in ordine.
+* **Tieni premuto ⌘V per aprire Clippa** (facoltativo): un ⌘V veloce incolla come sempre, tenuto premuto apre lo scaffale.
+* **Seleziona più elementi** per incollarli, fissarli o eliminarli insieme.
 * **Modifica e rinomina** gli elementi prima di incollarli; ruota le immagini; copia il testo di un'immagine.
 * **Suggerimenti** (✦): gli elementi adatti all'app in cui stai incollando, ordinati sul tuo Mac, con Apple Intelligence quando c'è.
 * **Strumenti AI**: Claude, Codex, Cursor e gli altri client MCP possono cercare nella cronologia, se lo permetti.
@@ -99,6 +101,8 @@ Premi **⇧⌘V** (oppure fai clic sull'icona nella barra dei menu e poi Apri Cl
 | ⌘O | Apri un link, o mostra un file nel Finder |
 | ⌘T | Sospendi Clippa per un'ora |
 | ⇧⌘C | Incolla in sequenza (funziona da qualsiasi app) |
+| ⌘V tenuto premuto | Apre Clippa da qualsiasi app (da attivare in Impostazioni → Scorciatoie) |
+| ⌘-clic, ⇧-clic, ⌘A | Seleziona più elementi; compare una barra con Incolla, Fissa ed Elimina |
 | Esc | Cancella la ricerca, poi chiude |
 
 Fai doppio clic su una scheda per incollarla, trascinala in qualsiasi app o su una bacheca. Con il clic destro trovi tutto il resto, compresi **Conserva** (la regola di conservazione del singolo elemento) e **Fissa**. Trascina il bordo superiore della barra per alzarla o abbassarla; una barra bassa passa a una vista compatta.

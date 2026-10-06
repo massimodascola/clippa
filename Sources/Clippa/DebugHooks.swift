@@ -11,11 +11,25 @@ import ClippaCore
 /// per line, and write "done" to debug-status.txt. Commands: show, hide,
 /// key <code> [command,shift,option,control], type <text>,
 /// flags [modifiers], click <index> [modifiers], wait <seconds>,
-/// suggestions, suggestion, newpinboard <name>, pin <pinboard>, list <history|pinboard>,
+/// seed <count>, holdtest, sheet-confirm, sheet-cancel, suggestions, suggestion, newpinboard <name>, pin <pinboard>, list <history|pinboard>,
 /// keep <automatic|hour|day|week|month|year|forever>,
 /// settings <tab number>, stack, onboarding, close-windows.
 @MainActor
 enum DebugHooks {
+    /// Appends a line to <data folder>/debug-log.txt, only with CLIPPA_DEBUG_HOOKS.
+    static func log(_ line: String) {
+        guard ProcessInfo.processInfo.environment["CLIPPA_DEBUG_HOOKS"] != nil else { return }
+        let url = ClippaPaths.dataDirectory.appendingPathComponent("debug-log.txt")
+        let text = "\(Date().timeIntervalSince1970) \(line)\n"
+        if let handle = try? FileHandle(forWritingTo: url) {
+            handle.seekToEndOfFile()
+            handle.write(Data(text.utf8))
+            try? handle.close()
+        } else {
+            try? text.write(to: url, atomically: true, encoding: .utf8)
+        }
+    }
+
     static func installIfRequested(app: AppController) {
         guard ProcessInfo.processInfo.environment["CLIPPA_DEBUG_HOOKS"] != nil else { return }
         CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), nil, { _, _, _, _, _ in
@@ -37,6 +51,7 @@ enum DebugHooks {
             let parts = line.split(separator: " ", maxSplits: 1).map(String.init)
             guard let command = parts.first else { continue }
             let argument = parts.count > 1 ? parts[1] : ""
+            log("command \(line)")
             switch command {
             case "show": app.shelf.show()
             case "hide": app.shelf.hide()
@@ -56,6 +71,23 @@ enum DebugHooks {
                 if let index = Int(pieces.first ?? ""), app.shelf.model.visibleItems.indices.contains(index) {
                     app.shelf.model.click(app.shelf.model.visibleItems[index], modifiers: modifiers(pieces.dropFirst().joined(separator: ",")))
                 }
+            case "seed":
+                for index in 1...(Int(argument) ?? 5) {
+                    _ = try? app.store.createTextItem("Test item \(index)")
+                }
+                app.shelf.externalChange()
+            case "sheet-confirm", "sheet-cancel":
+                // Clicks a button of the confirmation open on the shelf, if any.
+                func buttons(in view: NSView?) -> [NSButton] {
+                    guard let view else { return [] }
+                    return view.subviews.flatMap { ($0 as? NSButton).map { [$0] } ?? buttons(in: $0) }
+                }
+                let found = buttons(in: app.shelf.panel.attachedSheet?.contentView)
+                log("sheet buttons: \(found.map(\.title))")
+                let title = command == "sheet-confirm" ? L("Delete") : L("Cancel")
+                found.first { $0.title == title }?.performClick(nil)
+            case "holdtest":
+                await holdSelfTest(directory: directory)
             case "suggestions":
                 app.shelf.toggleSuggestions()
             case "suggestion":
@@ -138,5 +170,55 @@ enum DebugHooks {
     /// exactly as they would see the keyboard.
     private static func send(_ event: NSEvent, app: AppController) {
         NSApp.postEvent(event, atStart: false)
+    }
+
+    /// Feeds made-up ⌘V presses to the "hold ⌘V" logic, without sending
+    /// anything to other apps, and writes what it decided.
+    private static func holdSelfTest(directory: URL) async {
+        let watcher = HoldCommandV()
+        watcher.holdDelay = 0.3
+        var opened = 0, pasted = 0
+        watcher.onHold = { opened += 1 }
+        watcher.sendPaste = { pasted += 1 }
+        let v = KeyboardLayout.vKeyCode
+        func key(_ down: Bool, flags: CGEventFlags = .maskCommand, marked: Bool = false, repeating: Bool = false) -> Bool {
+            let event = CGEvent(keyboardEventSource: nil, virtualKey: v, keyDown: down)!
+            event.flags = flags
+            if marked { event.setIntegerValueField(.eventSourceUserData, value: HoldCommandV.marker) }
+            if repeating { event.setIntegerValueField(.keyboardEventAutorepeat, value: 1) }
+            return watcher.handle(down ? .keyDown : .keyUp, event) == nil // true = swallowed
+        }
+        var lines: [String] = []
+        func check(_ name: String, _ ok: Bool) { lines.append((ok ? "OK   " : "FAIL ") + name) }
+
+        let quickDown = key(true)
+        try? await Task.sleep(for: .milliseconds(80))
+        let quickUp = key(false)
+        check("quick press: key held back, then one paste, no shelf", quickDown && quickUp && pasted == 1 && opened == 0)
+
+        _ = key(true)
+        try? await Task.sleep(for: .milliseconds(450))
+        let heldUp = key(false)
+        check("held press: shelf opens, no paste, release swallowed", opened == 1 && pasted == 1 && heldUp)
+
+        _ = key(true)
+        let repeatOpens = key(true, repeating: true)
+        _ = key(false)
+        check("key repeat before the delay: opens at once", opened == 2 && pasted == 1 && repeatOpens)
+
+        let plainV = key(true, flags: [])
+        _ = key(false, flags: [])
+        check("V without ⌘ passes through", !plainV && pasted == 1)
+
+        let ownV = key(true, marked: true)
+        _ = key(false, marked: true)
+        check("Clippa's own ⌘V passes through", !ownV && pasted == 1 && opened == 2)
+
+        watcher.shouldIgnore = { true }
+        let ignored = key(true)
+        _ = key(false)
+        check("ignored while the shelf is open or Paste Stack is on", !ignored && pasted == 1)
+
+        try? lines.joined(separator: "\n").write(to: directory.appendingPathComponent("debug-holdtest.txt"), atomically: true, encoding: .utf8)
     }
 }

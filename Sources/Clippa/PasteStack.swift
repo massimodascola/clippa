@@ -92,7 +92,8 @@ final class PasteStack {
             let flags = event.flags.intersection([.maskCommand, .maskShift, .maskAlternate, .maskControl])
             let key = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
             if type == .keyDown, flags == .maskCommand, key == KeyboardLayout.vKeyCode,
-               event.getIntegerValueField(.keyboardEventAutorepeat) == 0 {
+               event.getIntegerValueField(.keyboardEventAutorepeat) == 0,
+               event.getIntegerValueField(.eventSourceUserData) != HoldCommandV.marker {
                 MainActor.assumeIsolated {
                     if !stack.isShelfKey() { stack.handleCommandV() }
                 }

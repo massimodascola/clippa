@@ -16,6 +16,8 @@ Clippa is an independent project, not affiliated with Paste or its makers.
 * **Pinboards**: named, colored collections for what you reuse. Pinned items never expire.
 * **Paste straight into the app you are using**, or as plain text, or several items at once. **Quick Paste** with ⌘1 to ⌘9.
 * **Paste Stack** (⇧⌘C): copy several things, then paste them one by one, in order.
+* **Hold ⌘V to open Clippa** (optional): a quick ⌘V pastes as usual, holding it opens the shelf.
+* **Select several items** to paste, pin or delete them together.
 * **Edit and rename** items before pasting; rotate images; copy the text of an image.
 * **Suggestions** (✦): the items that fit the app you are pasting into, ranked on your Mac, with Apple Intelligence when available.
 * **AI tools**: Claude, Codex, Cursor and other MCP clients can search your history, if you allow it.
@@ -99,6 +101,8 @@ Press **⇧⌘V** (or click the menu bar icon, then Open Clippa, or open Clippa 
 | ⌘O | Open a link, or show a file in Finder |
 | ⌘T | Pause Clippa for an hour |
 | ⇧⌘C | Paste Stack (works from any app) |
+| Hold ⌘V | Open Clippa from any app (turn it on in Settings → Shortcuts) |
+| ⌘-click, ⇧-click, ⌘A | Select several items; a bar offers Paste, Pin and Delete |
 | Esc | Clear the search, then close |
 
 Double-click a card to paste it, drag it into any app, or drag it onto a pinboard. Right-click a card for everything else, including **Keep** (its own retention rule) and **Pin**. Drag the top edge of the bar to make it taller or shorter; a short bar switches to a compact layout.

@@ -305,9 +305,23 @@ final class ShelfModel {
         flash(L("Copied"))
     }
 
+    /// Deleting many items at once asks first (the shelf can undo with ⌘Z,
+    /// but only while it stays open).
+    static let confirmDeletionFrom = 10
+
     func deleteSelection() {
         let ids = selectedItemsInOrder.map(\.id)
         guard !ids.isEmpty else { return }
+        if ids.count >= Self.confirmDeletionFrom {
+            // The confirmation deletes exactly these items, whatever is
+            // selected by the time it is answered.
+            controller?.confirmDelete(count: ids.count) { [weak self] in self?.delete(ids: ids) }
+        } else {
+            delete(ids: ids)
+        }
+    }
+
+    private func delete(ids: [String]) {
         let ordered = visibleItems.map(\.id)
         let firstIndex = ordered.firstIndex(of: ids[0]) ?? 0
         if let removed = try? store.delete(ids: ids), !removed.isEmpty {

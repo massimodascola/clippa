@@ -58,13 +58,6 @@ final class PasteService {
     }
 
     static func sendCommandV() {
-        let source = CGEventSource(stateID: .combinedSessionState)
-        let key = KeyboardLayout.vKeyCode
-        let down = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: true)
-        let up = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: false)
-        down?.flags = .maskCommand
-        up?.flags = .maskCommand
-        down?.post(tap: .cghidEventTap)
-        up?.post(tap: .cghidEventTap)
+        HoldCommandV.sendCommandV()
     }
 }

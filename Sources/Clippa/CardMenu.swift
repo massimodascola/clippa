@@ -90,7 +90,7 @@ struct CardMenu: View {
             }
         }
         Divider()
-        Button(L("Delete"), role: .destructive) {
+        Button(ids.count > 1 ? L("Delete %lld Items", ids.count) : L("Delete"), role: .destructive) {
             model.selection = ids
             model.deleteSelection()
         }

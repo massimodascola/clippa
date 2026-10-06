@@ -59,6 +59,7 @@ enum Pref {
     static let onboardingDone = "onboardingDone"
     static let pausedUntil = "pausedUntil"
     static let stackDirectionReversed = "stackDirectionReversed"
+    static let holdCommandV = "holdCommandV"
 
     /// Password managers and similar apps ignored out of the box.
     static let defaultIgnoredApps = [
@@ -106,6 +107,7 @@ enum Pref {
             syncMode: JournalMode.off.rawValue,
             onboardingDone: false,
             stackDirectionReversed: false,
+            holdCommandV: false,
         ])
     }
 

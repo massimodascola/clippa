@@ -264,9 +264,12 @@ struct ShortcutSettings: View {
     @State private var activate = Shortcut.load(Pref.activateShortcut, default: .activateDefault)
     @State private var stack = Shortcut.load(Pref.stackShortcut, default: .stackDefault)
     @State private var shortcutsWork = true
+    @AppStorage(Pref.holdCommandV) private var holdCommandV = false
+    @State private var holdWorks = true
 
     private func refresh() {
         shortcutsWork = app.activateShortcutWorks && app.stackShortcutWorks
+        holdWorks = !holdCommandV || app.updateHoldCommandV()
     }
 
     var body: some View {
@@ -289,6 +292,15 @@ struct ShortcutSettings: View {
                 if !shortcutsWork {
                     Text(L("Another app is already using one of these shortcuts. Quit that app or choose a different shortcut."))
                         .font(.caption).foregroundStyle(.orange)
+                }
+                Toggle(L("Hold ⌘V to open Clippa"), isOn: $holdCommandV)
+                    .onChange(of: holdCommandV) { _, _ in refresh() }
+                Text(L("A quick ⌘V pastes as usual; hold it for half a second to open Clippa instead. Pasting waits for the key to come up, a fraction of a second later than usual."))
+                    .font(.caption).foregroundStyle(.secondary)
+                if !holdWorks {
+                    PermissionRow(granted: false, title: L("Accessibility"),
+                                  detail: L("Needed to tell a quick ⌘V from a held one."),
+                                  action: Permissions.requestAccessibility)
                 }
                 Picker(L("Quick Paste (1–9)"), selection: $quickModifier) {
                     ForEach(ModifierChoice.allCases, id: \.rawValue) { Text("\($0.symbol) 1…9").tag($0.rawValue) }
