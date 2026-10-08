@@ -31,10 +31,11 @@ final class SyncCoordinator {
         let mode = Pref.syncModeValue
         store.journalMode = mode
         timer?.invalidate()
+        Log.info("Sync: \(mode.rawValue)")
         guard mode != .off else {
             engine = nil
-            try? store.clearOutbox()
-            try? store.setMeta("sync.configuration", nil)
+            Log.attempt("Sync: clearOutbox failed") { try store.clearOutbox() }
+            Log.attempt("Sync: setMeta failed") { try store.setMeta("sync.configuration", nil) }
             otherDevices = []
             return
         }
@@ -43,9 +44,9 @@ final class SyncCoordinator {
         let configuration = "\(mode.rawValue)|\(folder.path)"
         if (try? store.meta("sync.configuration")) != configuration {
             // First sync with this mode or folder: send everything it covers.
-            try? store.clearOutbox()
-            try? store.enqueueFullExport()
-            try? store.setMeta("sync.configuration", configuration)
+            Log.attempt("Sync: clearOutbox failed") { try store.clearOutbox() }
+            Log.attempt("Sync: enqueueFullExport failed") { try store.enqueueFullExport() }
+            Log.attempt("Sync: setMeta failed") { try store.setMeta("sync.configuration", configuration) }
         }
         let timer = Timer(timeInterval: 30, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.syncNow() }
@@ -77,11 +78,17 @@ final class SyncCoordinator {
                 self.otherDevices = devices
                 switch result {
                 case .success(let report):
+                    if self.lastError != nil { Log.info("Sync: working again") }
+                    if report.exported > 0 || report.imported > 0 {
+                        Log.info("Sync: \(report.exported) changes sent, \(report.imported) received, \(devices.count) other Macs")
+                    }
                     self.lastSync = Date()
                     self.lastError = nil
                     self.waitingForFiles = report.waitingForFiles
                     if report.imported > 0 { self.onImport() }
                 case .failure(let error):
+                    // Logged once per error, not every 30 seconds.
+                    if self.lastError != error.localizedDescription { Log.error("Sync failed", error) }
                     self.lastError = error.localizedDescription
                 }
             }
@@ -93,7 +100,7 @@ final class SyncCoordinator {
     func removeThisMacFromFolder() {
         let engine = SyncEngine(store: store, root: Pref.syncFolderURL, mode: .off, retention: Pref.keepHistoryValue)
         queue.async {
-            try? engine.removeThisDevice()
+            Log.attempt("Sync: removeThisDevice failed") { try engine.removeThisDevice() }
         }
     }
 }

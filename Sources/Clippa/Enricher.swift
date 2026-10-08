@@ -34,7 +34,7 @@ final class Enricher {
             DispatchQueue.main.async {
                 guard let self else { return }
                 // The item may have changed meanwhile: only fill this field.
-                try? self.store.modify(ids: [item.id]) { $0.ocrText = text }
+                Log.attempt("Enricher: could not save recognized text") { try self.store.modify(ids: [item.id]) { $0.ocrText = text } }
                 self.onUpdate(item.id)
             }
         }
@@ -53,10 +53,10 @@ final class Enricher {
                     guard let self else { return }
                     let blob = imageData.flatMap { ImageTools.thumbnail(of: $0, maxPixel: 600) }
                         .flatMap { try? self.store.blobs.write($0) }
-                    try? self.store.modify(ids: [item.id]) {
+                    Log.attempt("Enricher: modify failed") { try self.store.modify(ids: [item.id]) {
                         $0.linkTitle = title ?? url.host
                         $0.linkImage = blob
-                    }
+                    } }
                     self.onUpdate(item.id)
                 }
             }

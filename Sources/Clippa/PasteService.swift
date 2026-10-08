@@ -24,7 +24,7 @@ final class PasteService {
     func paste(_ items: [Item], plainText: Bool, into target: NSRunningApplication?) -> Result {
         guard copy(items, plainText: plainText) else { return .copiedOnly }
         for item in items {
-            try? store.recordPaste(itemID: item.id, into: target?.bundleIdentifier)
+            Log.attempt("Paste: recordPaste failed") { try store.recordPaste(itemID: item.id, into: target?.bundleIdentifier) }
         }
         guard Pref.destination == .activeApp, Permissions.canPaste else {
             Sounds.playCopy()
@@ -52,7 +52,7 @@ final class PasteService {
         let plain = plainText || UserDefaults.standard.bool(forKey: Pref.alwaysPlainText)
         let written = PasteboardWriter.write(items, store: store, mode: plain ? .plainText : .original)
         if written, items.count == 1 {
-            try? store.markCopied(items[0].id)
+            Log.attempt("Paste: markCopied failed") { try store.markCopied(items[0].id) }
         }
         return written
     }

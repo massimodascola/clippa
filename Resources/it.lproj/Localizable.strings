@@ -262,3 +262,14 @@
 "Back" = "Indietro";
 "Continue" = "Continua";
 "Start Using Clippa" = "Inizia a usare Clippa";
+
+/* Diagnostics */
+"Report a Problem…" = "Segnala un problema…";
+"Diagnostic report created" = "Rapporto di diagnostica creato";
+"“%@” is in %@. Send it to the developer, for example by attaching it to a GitHub issue.\n\nIt contains Clippa's settings, its log and any recent crash reports, but nothing you copied." = "“%@” si trova in %@. Mandalo allo sviluppatore, per esempio allegandolo a una segnalazione su GitHub.\n\nContiene le impostazioni di Clippa, il suo registro e gli eventuali rapporti di arresto recenti, ma niente di quello che hai copiato.";
+"Done" = "Fine";
+"Report on GitHub" = "Segnala su GitHub";
+"Clippa quit unexpectedly" = "Clippa si è chiusa in modo imprevisto";
+"A diagnostic report helps fix it. It contains nothing you copied." = "Un rapporto di diagnostica aiuta a correggere il problema. Non contiene niente di quello che hai copiato.";
+"Create Report" = "Crea rapporto";
+"Creates a file to send to the developer: settings, log and crash reports, never what you copied." = "Crea un file da mandare allo sviluppatore: impostazioni, registro e rapporti di arresto, mai quello che hai copiato.";

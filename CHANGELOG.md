@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0 (2026-10-08)
+
+* Diagnostics: Clippa keeps a log in `~/Library/Logs/Clippa` (what it did and what went wrong, never what was copied), and "Report a Problem…" (menu bar icon, or Settings → About) creates a report file to send to the developer.
+* After an unexpected quit, Clippa offers to create the report at the next launch.
+* Errors that used to be silent (saving, deleting, pinning, sync, housekeeping) are now written to the log.
+
 ## 1.3.1 (2026-10-06)
 
 * New icon: ⌘C in white inside a key with a pink-to-violet outline, on graphite. The ⌘ sign and the C are drawn as paths, and the ⌘C group is centered in the key from its measured outline.

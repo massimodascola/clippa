@@ -72,7 +72,7 @@ final class PasteStack {
     fileprivate func handleCommandV() {
         guard let item = next else { return }
         PasteboardWriter.write([item], store: store, mode: UserDefaults.standard.bool(forKey: Pref.alwaysPlainText) ? .plainText : .original)
-        try? store.recordPaste(itemID: item.id, into: NSWorkspace.shared.frontmostApplication?.bundleIdentifier)
+        Log.attempt("Paste Stack: recordPaste failed") { try store.recordPaste(itemID: item.id, into: NSWorkspace.shared.frontmostApplication?.bundleIdentifier) }
         items.removeAll { $0.id == item.id }
         Sounds.playPaste()
     }
@@ -99,7 +99,10 @@ final class PasteStack {
                 }
             }
             return Unmanaged.passUnretained(event)
-        }, userInfo: refcon) else { return }
+        }, userInfo: refcon) else {
+            Log.warning("Paste Stack: macOS refused to watch ⌘V (Accessibility not allowed)")
+            return
+        }
         tap = port
         tapSource = CFMachPortCreateRunLoopSource(nil, port, 0)
         CFRunLoopAddSource(CFRunLoopGetMain(), tapSource, .commonModes)

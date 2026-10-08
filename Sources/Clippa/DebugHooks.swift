@@ -11,7 +11,7 @@ import ClippaCore
 /// per line, and write "done" to debug-status.txt. Commands: show, hide,
 /// key <code> [command,shift,option,control], type <text>,
 /// flags [modifiers], click <index> [modifiers], wait <seconds>,
-/// seed <count>, holdtest, sheet-confirm, sheet-cancel, suggestions, suggestion, newpinboard <name>, pin <pinboard>, list <history|pinboard>,
+/// seed <count>, report, holdtest, sheet-confirm, sheet-cancel, suggestions, suggestion, newpinboard <name>, pin <pinboard>, list <history|pinboard>,
 /// keep <automatic|hour|day|week|month|year|forever>,
 /// settings <tab number>, stack, onboarding, close-windows.
 @MainActor
@@ -86,6 +86,9 @@ enum DebugHooks {
                 log("sheet buttons: \(found.map(\.title))")
                 let title = command == "sheet-confirm" ? L("Delete") : L("Cancel")
                 found.first { $0.title == title }?.performClick(nil)
+            case "report":
+                try? DiagnosticReport.build(app: app).write(to: directory.appendingPathComponent("debug-report.txt"),
+                                                            atomically: true, encoding: .utf8)
             case "holdtest":
                 await holdSelfTest(directory: directory)
             case "suggestions":

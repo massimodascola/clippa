@@ -19,6 +19,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var housekeeping: Timer?
     private var settingsWindow: SettingsWindowController?
     private var onboardingWindow: OnboardingWindowController?
+    let launchDate = Date()
 
     private enum HotKey: UInt32 {
         case activate = 1
@@ -45,9 +46,18 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppController.shared = self
         Pref.registerDefaults()
+        let info = Bundle.main.infoDictionary ?? [:]
+        Log.info("Clippa \(info["CFBundleShortVersionString"] ?? "?") (\(info["CFBundleVersion"] ?? "?")) started on "
+                 + "\(ProcessInfo.processInfo.operatingSystemVersionString)\(launchedAtLogin ? ", at login" : "")")
+        // An Objective-C exception would end Clippa: leave a trace first.
+        NSSetUncaughtExceptionHandler { exception in
+            Log.writeNow("CRASH", "\(exception.name.rawValue): \(exception.reason ?? "")\n"
+                         + exception.callStackSymbols.prefix(25).joined(separator: "\n"))
+        }
         do {
             store = try ClippaStore(deviceID: Pref.thisDeviceID, deviceName: Pref.thisDeviceName)
         } catch {
+            Log.error("Could not open the data folder", error)
             let alert = NSAlert()
             alert.messageText = L("Clippa can't open its data")
             alert.informativeText = "\(error)"
@@ -104,10 +114,18 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
         }, ClippaSignal.storeChanged as CFString, nil, .deliverImmediately)
 
+        Log.info("Permissions: accessibility \(Permissions.canPaste ? "allowed" : "NOT allowed"), "
+                 + "clipboard \(Permissions.clipboardAccess), screen \(Permissions.canReadScreen ? "allowed" : "not allowed")")
         if !UserDefaults.standard.bool(forKey: Pref.onboardingDone) {
             showOnboarding()
-        } else if !launchedAtLogin {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in self?.shelf.show() }
+        } else {
+            if !launchedAtLogin {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in self?.shelf.show() }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                guard let self else { return }
+                DiagnosticReport.checkForRecentCrash(app: self)
+            }
         }
         DebugHooks.installIfRequested(app: self)
     }
@@ -127,9 +145,13 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func save(_ raw: ClipboardMonitor.RawCapture) {
         let store = store!
         saveQueue.async { [weak self] in
-            guard let content = ClipboardMonitor.process(raw), let item = try? store.save(content) else { return }
+            guard let content = ClipboardMonitor.process(raw) else { return }
+            guard let item = Log.attempt("Could not save a copy (\(raw.representations.count) formats)", { try store.save(content) }) else {
+                return
+            }
             DispatchQueue.main.async {
                 guard let self else { return }
+                Log.info("Saved a copy: \(item.kind.rawValue), \(item.byteSize) bytes, \(item.representations.count) formats")
                 Sounds.playCopy()
                 self.enricher.process(item)
                 self.stack.add(item)
@@ -145,10 +167,15 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// Applies Keep History and the per-item rules, then frees unused files.
     func runHousekeeping() {
-        let removed = (try? store.purgeExpired(retention: Pref.keepHistoryValue)) ?? 0
+        let removed = Log.attempt("Housekeeping: could not apply Keep History") {
+            try store.purgeExpired(retention: Pref.keepHistoryValue)
+        } ?? 0
+        if removed > 0 { Log.info("Housekeeping: \(removed) expired items deleted") }
         let lastCollection = UserDefaults.standard.double(forKey: "lastGarbageCollection")
         if removed > 0 || Date().timeIntervalSince1970 - lastCollection > 86_400 {
-            _ = try? store.collectGarbage()
+            if let files = Log.attempt("Housekeeping: could not clean up files", { try store.collectGarbage() }), files > 0 {
+                Log.info("Housekeeping: \(files) unused files removed")
+            }
             UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "lastGarbageCollection")
         }
         if removed > 0 { shelf.externalChange() }
@@ -164,7 +191,12 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// false when it is on but macOS refused (no Accessibility permission).
     @discardableResult
     func updateHoldCommandV() -> Bool {
-        holdCommandV.setEnabled(UserDefaults.standard.bool(forKey: Pref.holdCommandV))
+        let wanted = UserDefaults.standard.bool(forKey: Pref.holdCommandV)
+        let wasRunning = holdCommandV.isRunning
+        let done = holdCommandV.setEnabled(wanted)
+        if wanted, !done { Log.warning("Hold ⌘V: macOS refused to watch the keyboard (Accessibility not allowed)") }
+        if wanted, done, !wasRunning { Log.info("Hold ⌘V: watching") }
+        return done
     }
 
     func registerHotKeys() {
@@ -178,6 +210,8 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         ) { [weak self] in
             self?.stack.toggle()
         }
+        if !activateShortcutWorks { Log.warning("macOS refused the Open Clippa shortcut") }
+        if !stackShortcutWorks { Log.warning("macOS refused the Paste Stack shortcut") }
     }
 
     // MARK: - Pause
@@ -251,6 +285,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         menu.addItem(withTitle: L("Settings…"), action: #selector(openSettings), keyEquivalent: ",")
         menu.addItem(withTitle: L("About Clippa"), action: #selector(openAbout), keyEquivalent: "")
+        menu.addItem(withTitle: L("Report a Problem…"), action: #selector(reportProblem), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: L("Quit Clippa"), action: #selector(quit), keyEquivalent: "q")
         for item in menu.items where item.action != nil { item.target = self }
@@ -265,6 +300,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func resumeFromMenu() { resume() }
     @objc private func openSettings() { showSettings() }
     @objc private func openAbout() { showSettings(tab: .about) }
+    @objc private func reportProblem() { DiagnosticReport.createAndShow(app: self) }
     @objc private func quit() { NSApp.terminate(nil) }
 
     @objc private func pauseFromMenu(_ sender: NSMenuItem) {

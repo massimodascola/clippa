@@ -116,7 +116,7 @@ final class EditorController: NSObject, NSWindowDelegate {
         MainActor.assumeIsolated {
             // A new empty item (Command-N) that was never written disappears.
             if !saved, let item, item.text.isEmpty {
-                _ = try? shelf.model.store.delete(ids: [item.id])
+                Log.attempt("Editor: delete failed") { try shelf.model.store.delete(ids: [item.id]) }
                 shelf.model.reload()
             }
             shelf.editorDidClose(saved: saved || (item?.text.isEmpty ?? false))

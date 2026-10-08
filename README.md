@@ -147,6 +147,12 @@ Settings → Sync, on each Mac:
 
 Clippa syncs through a folder, `iCloud Drive/Clippa` by default (any synced folder works, e.g. Dropbox: choose the same one on every Mac). Each Mac writes only its own files there and reads the others', so iCloud never has to merge a file; when two Macs change the same item, the newest change wins. Clippa does not use CloudKit, which needs a paid Apple developer account. The data in that folder is protected like the rest of your iCloud Drive (end-to-end encrypted only if Advanced Data Protection is on). Items larger than 25 MB, and the files behind copied file references, are not synced. Each Mac applies its own Keep History.
 
+## Reporting a problem
+
+Click the menu bar icon, then **Report a Problem…** (also in Settings → About). Clippa saves a text file on your Desktop with its version, your Mac and macOS version, its permissions and settings, the size of its data, its recent log and any recent crash reports. It contains nothing you copied: no text, images, links, file names or app names. Attach it to a [GitHub issue](https://github.com/massimodascola/clippa/issues/new) or send it to whoever gave you Clippa.
+
+The log itself is in `~/Library/Logs/Clippa/clippa.log`, and after an unexpected quit Clippa offers to create the report.
+
 ## Privacy
 
 * Everything stays in `~/Library/Application Support/Clippa` on your Mac (a SQLite database and a folder of files), unless you turn on sync.

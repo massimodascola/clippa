@@ -64,7 +64,7 @@ final class SettingsWindowController: NSWindowController {
         case .privacy: PrivacySettings()
         case .sync: SyncSettings(sync: app.sync)
         case .intelligence: IntelligenceSettings()
-        case .about: AboutSettings(store: app.store)
+        case .about: AboutSettings(app: app, store: app.store)
         }
     }
 
@@ -184,8 +184,8 @@ struct GeneralSettings: View {
         alert.addButton(withTitle: L("Cancel"))
         alert.buttons.first?.hasDestructiveAction = true
         guard alert.runModal() == .alertFirstButtonReturn else { return }
-        _ = try? app.store.eraseHistory()
-        _ = try? app.store.collectGarbage()
+        Log.attempt("Settings: eraseHistory failed") { try app.store.eraseHistory() }
+        Log.attempt("Settings: collectGarbage failed") { try app.store.collectGarbage() }
         app.storeDidChange()
         app.shelf.externalChange()
         update()
@@ -630,6 +630,7 @@ struct IntelligenceSettings: View {
 // MARK: - About
 
 struct AboutSettings: View {
+    let app: AppController
     let store: ClippaStore
 
     private var version: String {
@@ -651,6 +652,12 @@ struct AboutSettings: View {
                 Button(L("Show Data Folder")) { NSWorkspace.shared.open(store.directory) }
             }
             .padding(.top, 8)
+            VStack(spacing: 6) {
+                Button(L("Report a Problem…")) { DiagnosticReport.createAndShow(app: app) }
+                Text(L("Creates a file to send to the developer: settings, log and crash reports, never what you copied."))
+                    .font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            }
+            .padding(.top, 14)
         }
         .frame(maxWidth: .infinity)
         .padding(30)

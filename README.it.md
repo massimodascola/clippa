@@ -147,6 +147,12 @@ Impostazioni → Sincronizzazione, su ogni Mac:
 
 Clippa sincronizza attraverso una cartella, `iCloud Drive/Clippa` di predefinito (va bene qualsiasi cartella sincronizzata, per esempio Dropbox: scegli la stessa su ogni Mac). Ogni Mac scrive solo i suoi file e legge quelli degli altri, così iCloud non deve mai unire un file; quando due Mac cambiano lo stesso elemento, vince la modifica più recente. Clippa non usa CloudKit, che richiede un account sviluppatore Apple a pagamento. I dati in quella cartella sono protetti come il resto del tuo iCloud Drive (cifrati end-to-end solo con la Protezione avanzata dei dati attiva). Non si sincronizzano gli elementi oltre i 25 MB né i file a cui puntano i riferimenti a file copiati. Ogni Mac applica la sua regola di conservazione.
 
+## Segnalare un problema
+
+Fai clic sull'icona nella barra dei menu, poi **Segnala un problema…** (c'è anche in Impostazioni → Info). Clippa salva sulla Scrivania un file di testo con la sua versione, il modello di Mac e la versione di macOS, i permessi e le impostazioni, quanto occupano i dati, il registro recente e gli eventuali rapporti di arresto recenti. Non contiene niente di quello che hai copiato: niente testi, immagini, link, nomi di file o di app. Allegalo a una [segnalazione su GitHub](https://github.com/massimodascola/clippa/issues/new) o mandalo a chi ti ha dato Clippa.
+
+Il registro è in `~/Library/Logs/Clippa/clippa.log`, e dopo una chiusura imprevista Clippa propone di creare il rapporto.
+
 ## Privacy
 
 * Tutto resta in `~/Library/Application Support/Clippa` sul tuo Mac (un database SQLite e una cartella di file), salvo che tu attivi la sincronizzazione.

@@ -78,6 +78,8 @@ final class ShelfController: NSObject, NSWindowDelegate {
         let screen = NSScreen.screens.first { NSMouseInRect(NSEvent.mouseLocation, $0.frame, false) } ?? NSScreen.main
         guard let screen else { return }
         let frame = targetFrame(on: screen, height: storedHeight(for: screen))
+        Log.info("Shelf opened: screen \(Int(screen.frame.width))×\(Int(screen.frame.height)), "
+                 + "height \(Int(frame.height)), \(model.visibleItems.count) items shown")
         model.compact = frame.height < Self.compactHeight
         var start = frame
         start.origin.y -= frame.height * 0.35
@@ -177,7 +179,10 @@ final class ShelfController: NSObject, NSWindowDelegate {
     func paste(_ items: [Item], plainText: Bool) {
         let target = self.target
         hide(animated: false)
-        switch pasteService.paste(items, plainText: plainText, into: target) {
+        let result = pasteService.paste(items, plainText: plainText, into: target)
+        Log.info("Paste: \(items.count) item(s), \(plainText ? "plain text" : "original"), \(result)"
+                 + (target == nil ? ", no target app" : ""))
+        switch result {
         case .needsPermission:
             app.showPastePermissionHelp()
         case .pasted, .copiedOnly:

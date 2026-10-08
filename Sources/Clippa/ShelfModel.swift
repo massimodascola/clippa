@@ -160,13 +160,13 @@ final class ShelfModel {
 
     /// Reloads from the store, keeping the selection where possible.
     func reload(keepingCount: Bool = true) {
-        pinboards = (try? store.pinboards()) ?? []
+        pinboards = Log.attempt("Shelf: could not load pinboards") { try store.pinboards() } ?? []
         if case .pinboard(let id) = list, !pinboards.contains(where: { $0.id == id }) {
             list = .history
         }
         var query = self.query
         if keepingCount { query.limit = max(pageSize, items.count) }
-        let loaded = (try? store.items(matching: query)) ?? []
+        let loaded = Log.attempt("Shelf: could not load items") { try store.items(matching: query) } ?? []
         items = loaded
         hasMore = loaded.count == query.limit
         if showingSuggestions {
@@ -185,7 +185,7 @@ final class ShelfModel {
         guard hasMore else { return }
         var query = self.query
         query.offset = items.count
-        let more = (try? store.items(matching: query)) ?? []
+        let more = Log.attempt("Shelf: could not load more items") { try store.items(matching: query) } ?? []
         items += more
         hasMore = more.count == query.limit
     }
@@ -324,7 +324,7 @@ final class ShelfModel {
     private func delete(ids: [String]) {
         let ordered = visibleItems.map(\.id)
         let firstIndex = ordered.firstIndex(of: ids[0]) ?? 0
-        if let removed = try? store.delete(ids: ids), !removed.isEmpty {
+        if let removed = Log.attempt("Shelf: could not delete \(ids.count) items", { try store.delete(ids: ids) }), !removed.isEmpty {
             undoStack.append(removed)
         }
         suggestions.removeAll { ids.contains($0.id) }
@@ -341,7 +341,7 @@ final class ShelfModel {
 
     func undo() {
         guard let items = undoStack.popLast() else { return }
-        try? store.restore(items)
+        Log.attempt("Shelf: restore failed") { try store.restore(items) }
         reload()
         selection = items.map(\.id)
         scrollTarget = items.first?.id
@@ -349,14 +349,14 @@ final class ShelfModel {
     }
 
     func rename(_ id: String, to title: String) {
-        try? store.setTitle(title, for: id)
+        Log.attempt("Shelf: setTitle failed") { try store.setTitle(title, for: id) }
         renamingID = nil
         reload()
         controller?.storeDidChange()
     }
 
     func pin(_ ids: [String], to pinboardID: String?) {
-        try? store.pin(ids, to: pinboardID)
+        Log.attempt("Shelf: pin failed") { try store.pin(ids, to: pinboardID) }
         reload()
         if let pinboardID, let name = pinboards.first(where: { $0.id == pinboardID })?.name {
             flash(L("Pinned to %@", name))
@@ -365,7 +365,7 @@ final class ShelfModel {
     }
 
     func setKeep(_ choice: KeepChoice, for ids: [String]) {
-        try? store.setKeep(choice.rule(), for: ids)
+        Log.attempt("Shelf: setKeep failed") { try store.setKeep(choice.rule(), for: ids) }
         reload()
         controller?.storeDidChange()
     }
@@ -373,7 +373,7 @@ final class ShelfModel {
     func createTextItem() {
         let pinboardID: String?
         if case .pinboard(let id) = list { pinboardID = id } else { pinboardID = nil }
-        guard let item = try? store.createTextItem("", pinboardID: pinboardID) else { return }
+        guard let item = Log.attempt("Shelf: could not create a text item", { try store.createTextItem("", pinboardID: pinboardID) }) else { return }
         reload()
         selection = [item.id]
         scrollTarget = item.id
@@ -398,7 +398,7 @@ final class ShelfModel {
     func moveInPinboard(_ id: String, before targetID: String) {
         guard case .pinboard(let pinboardID) = list, id != targetID,
               let index = items.firstIndex(where: { $0.id == targetID }) else { return }
-        try? store.move(id, toIndex: index, in: pinboardID)
+        Log.attempt("Shelf: move failed") { try store.move(id, toIndex: index, in: pinboardID) }
         reload()
         controller?.storeDidChange()
     }
@@ -408,7 +408,8 @@ final class ShelfModel {
     func createPinboard(name: String, color: PinboardColor) {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         creatingPinboard = false
-        guard !trimmed.isEmpty, let pinboard = try? store.createPinboard(name: trimmed, color: color) else { return }
+        guard !trimmed.isEmpty,
+              let pinboard = Log.attempt("Shelf: could not create a pinboard", { try store.createPinboard(name: trimmed, color: color) }) else { return }
         reload()
         show(list: .pinboard(pinboard.id))
         controller?.storeDidChange()
@@ -419,7 +420,7 @@ final class ShelfModel {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty, var pinboard = pinboards.first(where: { $0.id == id }) else { return }
         pinboard.name = trimmed
-        try? store.savePinboard(pinboard)
+        Log.attempt("Shelf: savePinboard failed") { try store.savePinboard(pinboard) }
         reload()
         controller?.storeDidChange()
     }
@@ -427,13 +428,13 @@ final class ShelfModel {
     func setColor(_ color: PinboardColor, of id: String) {
         guard var pinboard = pinboards.first(where: { $0.id == id }) else { return }
         pinboard.color = color
-        try? store.savePinboard(pinboard)
+        Log.attempt("Shelf: savePinboard failed") { try store.savePinboard(pinboard) }
         reload()
         controller?.storeDidChange()
     }
 
     func deletePinboard(_ id: String) {
-        try? store.deletePinboard(id: id)
+        Log.attempt("Shelf: deletePinboard failed") { try store.deletePinboard(id: id) }
         if list == .pinboard(id) { list = .history }
         reload(keepingCount: false)
         controller?.storeDidChange()
@@ -444,7 +445,7 @@ final class ShelfModel {
         ids.removeAll { $0 == id }
         let index = targetID.flatMap { ids.firstIndex(of: $0) } ?? ids.count
         ids.insert(id, at: index)
-        try? store.reorderPinboards(ids)
+        Log.attempt("Shelf: reorderPinboards failed") { try store.reorderPinboards(ids) }
         reload()
         controller?.storeDidChange()
     }
