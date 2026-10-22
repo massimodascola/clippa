@@ -158,7 +158,7 @@ The log itself is in `~/Library/Logs/Clippa/clippa.log`, and after an unexpected
 ## Privacy
 
 * Everything stays in `~/Library/Application Support/Clippa` on your Mac (a SQLite database and a folder of files), unless you turn on sync.
-* By default Clippa ignores content marked as confidential or transient (password managers mark passwords this way) and everything copied in common password managers. The one exception is a Wispr Flow dictation (text and HTML, while Wispr Flow is running), which is saved like a copy. Add more apps in Settings → Privacy. Some browser extensions copy passwords in a way no app can detect: ignore the browser too if that worries you.
+* By default Clippa ignores content marked as confidential or transient (password managers mark passwords this way) and everything copied in common password managers. The one exception is a Wispr Flow dictation: Clippa saves it once Wispr Flow puts the old clipboard back, which a password manager never does. Add more apps in Settings → Privacy. Some browser extensions copy passwords in a way no app can detect: ignore the browser too if that worries you.
 * Link previews download the title and picture of copied web links; turn them off in Settings → Privacy.
 * Pause Clippa from the menu bar (15 minutes, 1 hour, 8 hours or until you resume) or with ⌘T in the bar.
 

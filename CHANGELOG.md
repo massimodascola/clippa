@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1 (2026-10-22)
+
+* Wispr Flow: dictations written as plain text only (no HTML) were still ignored. Clippa now reads any confidential text copy while Wispr Flow is running, keeps it in memory only, and saves it once Wispr Flow puts the old clipboard back; a password copied from a password manager never gets that restore, so it is forgotten within two seconds.
+
 ## 1.5.0 (2026-10-22)
 
 * Final Cut Pro: clips copied from a timeline are saved, with their names on the card, and paste back into Final Cut Pro exactly as they were copied. Other apps' own content (copies with no text, image or file) is kept the same way, under the new "App Content" type.
