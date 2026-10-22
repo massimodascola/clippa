@@ -17,7 +17,9 @@ struct CardMenu: View {
 
     var body: some View {
         Button(L("Paste")) { paste(plain: false) }
-        Button(L("Paste as Plain Text")) { paste(plain: true) }
+        if item.kind != .other {
+            Button(L("Paste as Plain Text")) { paste(plain: true) }
+        }
         Button(L("Copy")) {
             model.selection = ids
             model.copySelection()

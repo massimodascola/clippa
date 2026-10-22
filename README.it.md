@@ -18,6 +18,8 @@ Clippa è un progetto indipendente, non collegato a Paste né ai suoi autori.
 * **Incolla in sequenza** (⇧⌘C): copi più cose, poi le incolli una alla volta, in ordine.
 * **Tieni premuto ⌘V per aprire Clippa** (facoltativo): un ⌘V veloce incolla come sempre, tenuto premuto apre lo scaffale.
 * **Seleziona più elementi** per incollarli, fissarli o eliminarli insieme.
+* **Contenuti di app**, come le clip copiate da una timeline di **Final Cut Pro**: salvate con i loro nomi e incollate di nuovo nell'app esattamente come le hai copiate.
+* **I dettati di Wispr Flow** finiscono anche loro nella cronologia.
 * **Modifica e rinomina** gli elementi prima di incollarli; ruota le immagini; copia il testo di un'immagine.
 * **Suggerimenti** (✦): gli elementi adatti all'app in cui stai incollando, ordinati sul tuo Mac, con Apple Intelligence quando c'è.
 * **Strumenti AI**: Claude, Codex, Cursor e gli altri client MCP possono cercare nella cronologia, se lo permetti.
@@ -156,7 +158,7 @@ Il registro è in `~/Library/Logs/Clippa/clippa.log`, e dopo una chiusura imprev
 ## Privacy
 
 * Tutto resta in `~/Library/Application Support/Clippa` sul tuo Mac (un database SQLite e una cartella di file), salvo che tu attivi la sincronizzazione.
-* Di predefinito Clippa ignora i contenuti segnati come riservati o temporanei (i gestori di password segnano così le password) e tutto quello che copi nei gestori di password più diffusi. Aggiungi altre app in Impostazioni → Privacy. Alcune estensioni dei browser copiano le password in un modo che nessuna app può riconoscere: se ti preoccupa, ignora anche il browser.
+* Di predefinito Clippa ignora i contenuti segnati come riservati o temporanei (i gestori di password segnano così le password) e tutto quello che copi nei gestori di password più diffusi. L'unica eccezione è un dettato di Wispr Flow (testo e HTML, mentre Wispr Flow è aperto), che viene salvato come una copia. Aggiungi altre app in Impostazioni → Privacy. Alcune estensioni dei browser copiano le password in un modo che nessuna app può riconoscere: se ti preoccupa, ignora anche il browser.
 * Le anteprime dei link scaricano titolo e immagine dei link web copiati; si spengono in Impostazioni → Privacy.
 * Sospendi Clippa dalla barra dei menu (15 minuti, 1 ora, 8 ore o finché non riprendi) o con ⌘T nella barra.
 
@@ -188,6 +190,7 @@ CLIPPA_SIGN_IDENTITY="Apple Development" sh build.sh --install
 * Niente bacheche condivise: condividerle con altre persone richiederebbe un server o CloudKit.
 * I suggerimenti sono ordinati da Apple Intelligence solo sui Mac dove è disponibile e attiva; altrimenti Clippa usa il suo ordinamento sul Mac.
 * I file copiati sono conservati come riferimenti: se il file viene spostato o cancellato, la scheda resta ma il file non c'è più.
+* Clip di Final Cut Pro: Clippa conserva quello che Final Cut Pro mette negli appunti, non i file multimediali, che devono essere ancora disponibili quando incolli. I nomi delle clip vengono da un formato non documentato: se una scheda non li mostra, incollare funziona lo stesso.
 * Non c'è un download già pronto: l'app viene firmata ad hoc dal Mac che la compila.
 
 ## Come funziona

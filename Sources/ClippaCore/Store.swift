@@ -195,7 +195,7 @@ public final class ClippaStore: @unchecked Sendable {
         let reps = (try? JSONDecoder().decode([Representation].self, from: Data(row.string(23).utf8))) ?? []
         return Item(
             id: row.string(0),
-            kind: ItemKind(rawValue: row.string(1)) ?? .text,
+            kind: ItemKind(rawValue: row.string(1)) ?? .other,
             createdAt: row.date(2),
             copiedAt: row.date(3),
             title: row.optionalString(4),
@@ -649,7 +649,7 @@ public final class ClippaStore: @unchecked Sendable {
         let rows = try db.query("""
         SELECT items.kind, COUNT(*) FROM paste_log JOIN items ON items.id = paste_log.item_id
         WHERE paste_log.target_bundle_id = ? GROUP BY items.kind
-        """, [targetBundleID]) { (ItemKind(rawValue: $0.string(0)) ?? .text, $0.int(1)) }
+        """, [targetBundleID]) { (ItemKind(rawValue: $0.string(0)) ?? .other, $0.int(1)) }
         return Dictionary(rows, uniquingKeysWith: +)
     }
 

@@ -79,10 +79,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         registerHotKeys()
         holdCommandV.onHold = { [weak self] in self?.shelf.show() }
-        holdCommandV.shouldIgnore = { [weak self] in
-            guard let self else { return true }
-            return self.shelf.isVisible || self.stack.isActive
-        }
+        stack.onActiveChange = { [weak self] in self?.updateHoldSuspension() }
         updateHoldCommandV()
         // If the Accessibility permission arrives while Clippa is running,
         // start watching ⌘V without waiting for a relaunch.
@@ -152,9 +149,13 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
             DispatchQueue.main.async {
                 guard let self else { return }
                 Log.info("Saved a copy: \(item.kind.rawValue), \(item.byteSize) bytes, \(item.representations.count) formats")
-                Sounds.playCopy()
                 self.enricher.process(item)
-                self.stack.add(item)
+                // A dictation was not copied: no copy sound, and it stays
+                // out of Paste Stack.
+                if !raw.isDictation {
+                    Sounds.playCopy()
+                    self.stack.add(item)
+                }
                 self.shelf.externalChange()
                 self.sync.scheduleSoon()
             }
@@ -186,6 +187,11 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// False when macOS refused the shortcut (another app already uses it).
     private(set) var activateShortcutWorks = true
     private(set) var stackShortcutWorks = true
+
+    /// ⌘V is left alone while the shelf is open or Paste Stack is on.
+    func updateHoldSuspension() {
+        holdCommandV.isSuspended = shelf.isVisible || stack.isActive
+    }
 
     /// Turns "Hold ⌘V to open Clippa" on or off as in Settings. Returns
     /// false when it is on but macOS refused (no Accessibility permission).

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0 (2026-10-22)
+
+* Final Cut Pro: clips copied from a timeline are saved, with their names on the card, and paste back into Final Cut Pro exactly as they were copied. Other apps' own content (copies with no text, image or file) is kept the same way, under the new "App Content" type.
+* Wispr Flow: dictations are saved in the history, without the copy sound. Wispr Flow marks them confidential and then puts the old clipboard back; Clippa keeps the dictation in front and ignores that restore. Passwords are still ignored.
+* Universal Clipboard: a copy made on the iPhone or another Mac is read away from the main thread, and only in the formats worth keeping, instead of fetching every format over the air at once.
+* "Hold ⌘V to open Clippa" watches the keyboard on its own thread, so typing and ⌘V never wait for Clippa while it is busy (saving a big copy, or fetching one from the iPhone).
+* Sync: a kind of item unknown to an older Clippa no longer stops it. Update Clippa on every Mac that syncs: 1.4.0 and earlier stop importing from a Mac that sends Final Cut Pro clips.
+
 ## 1.4.0 (2026-10-08)
 
 * Diagnostics: Clippa keeps a log in `~/Library/Logs/Clippa` (what it did and what went wrong, never what was copied), and "Report a Problem…" (menu bar icon, or Settings → About) creates a report file to send to the developer.

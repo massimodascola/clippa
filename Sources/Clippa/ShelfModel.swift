@@ -45,6 +45,7 @@ extension ItemKind {
         case .image: return L("Image")
         case .file: return L("File")
         case .color: return L("Color")
+        case .other: return L("App Content")
         }
     }
 
@@ -55,6 +56,7 @@ extension ItemKind {
         case .image: return L("Images")
         case .file: return L("Files")
         case .color: return L("Colors")
+        case .other: return L("App Content")
         }
     }
 
@@ -65,6 +67,7 @@ extension ItemKind {
         case .image: return "photo"
         case .file: return "doc"
         case .color: return "paintpalette"
+        case .other: return "shippingbox"
         }
     }
 }

@@ -283,6 +283,12 @@ public final class MCPServer {
             if let image = imageData(of: item, store: store) {
                 content.append(["type": "image", "data": image.data.base64EncodedString(), "mimeType": image.mime])
             }
+        case .other:
+            // An app's own data (Final Cut Pro clips, say): only its description.
+            let lines = item.text.components(separatedBy: "\n")
+            details["app"] = lines.first ?? ""
+            if lines.count > 1 { details["names"] = Array(lines.dropFirst()) }
+            details["formats"] = item.representations.map(\.type)
         }
         content.insert(["type": "text", "text": json(details)], at: 0)
         return ["content": content]

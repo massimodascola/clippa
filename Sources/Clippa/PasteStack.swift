@@ -12,7 +12,9 @@ import SwiftUI
 @Observable
 final class PasteStack {
     private(set) var items: [Item] = []
-    private(set) var isActive = false
+    private(set) var isActive = false {
+        didSet { onActiveChange() }
+    }
     var reversed: Bool {
         didSet { UserDefaults.standard.set(reversed, forKey: Pref.stackDirectionReversed) }
     }
@@ -22,6 +24,7 @@ final class PasteStack {
     @ObservationIgnored private var tap: CFMachPort?
     @ObservationIgnored private var tapSource: CFRunLoopSource?
     @ObservationIgnored var isShelfKey: () -> Bool = { false }
+    @ObservationIgnored var onActiveChange: () -> Void = {}
 
     init(store: ClippaStore) {
         self.store = store

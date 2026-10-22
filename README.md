@@ -18,6 +18,8 @@ Clippa is an independent project, not affiliated with Paste or its makers.
 * **Paste Stack** (⇧⌘C): copy several things, then paste them one by one, in order.
 * **Hold ⌘V to open Clippa** (optional): a quick ⌘V pastes as usual, holding it opens the shelf.
 * **Select several items** to paste, pin or delete them together.
+* **App content**, like clips copied from a **Final Cut Pro** timeline: saved with their names and pasted back into the app exactly as copied.
+* **Wispr Flow dictations** are saved in the history too.
 * **Edit and rename** items before pasting; rotate images; copy the text of an image.
 * **Suggestions** (✦): the items that fit the app you are pasting into, ranked on your Mac, with Apple Intelligence when available.
 * **AI tools**: Claude, Codex, Cursor and other MCP clients can search your history, if you allow it.
@@ -156,7 +158,7 @@ The log itself is in `~/Library/Logs/Clippa/clippa.log`, and after an unexpected
 ## Privacy
 
 * Everything stays in `~/Library/Application Support/Clippa` on your Mac (a SQLite database and a folder of files), unless you turn on sync.
-* By default Clippa ignores content marked as confidential or transient (password managers mark passwords this way) and everything copied in common password managers. Add more apps in Settings → Privacy. Some browser extensions copy passwords in a way no app can detect: ignore the browser too if that worries you.
+* By default Clippa ignores content marked as confidential or transient (password managers mark passwords this way) and everything copied in common password managers. The one exception is a Wispr Flow dictation (text and HTML, while Wispr Flow is running), which is saved like a copy. Add more apps in Settings → Privacy. Some browser extensions copy passwords in a way no app can detect: ignore the browser too if that worries you.
 * Link previews download the title and picture of copied web links; turn them off in Settings → Privacy.
 * Pause Clippa from the menu bar (15 minutes, 1 hour, 8 hours or until you resume) or with ⌘T in the bar.
 
@@ -188,6 +190,7 @@ CLIPPA_SIGN_IDENTITY="Apple Development" sh build.sh --install
 * No shared pinboards: sharing with other people would need a server or CloudKit.
 * Suggestions are ranked by Apple Intelligence only on Macs where it is available and turned on; otherwise Clippa uses its own on-device ranking.
 * Copied files are kept as references: if the file is moved or deleted, the card stays but the file is gone.
+* Final Cut Pro clips: Clippa keeps what Final Cut Pro puts on the clipboard, not the media, which must still be available when you paste. The clip names come from an undocumented format: if a card shows none, pasting still works.
 * There is no prebuilt download: the app is signed ad hoc by the Mac that builds it.
 
 ## How it works

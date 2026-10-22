@@ -182,6 +182,9 @@ struct CardView: View {
         case .file:
             let count = item.text.components(separatedBy: "\n").count
             return count == 1 ? L("File") : L("%lld Files", count)
+        case .other:
+            // The app's name (Final Cut Pro, say).
+            return item.text.components(separatedBy: "\n").first.flatMap { $0.isEmpty ? nil : $0 } ?? item.kind.name
         default:
             return item.kind.name
         }
@@ -257,6 +260,8 @@ struct CardView: View {
         case .color:
             guard let rgb = Classifier.rgb(item.text) else { return nil }
             return "RGB \(Int(rgb.red * 255)) \(Int(rgb.green * 255)) \(Int(rgb.blue * 255))"
+        case .other:
+            return ByteCountFormatter.string(fromByteCount: Int64(item.byteSize), countStyle: .file)
         }
     }
 
@@ -283,6 +288,13 @@ struct CardView: View {
             if let path = item.text.components(separatedBy: "\n").first {
                 provider.registerObject(URL(fileURLWithPath: path) as NSURL, visibility: .all)
             }
+        case .other:
+            for rep in item.representations where rep.index == 0 {
+                provider.registerDataRepresentation(forTypeIdentifier: rep.type, visibility: .all) { completion in
+                    completion(store.blobs.read(rep.blob), nil)
+                    return nil
+                }
+            }
         default:
             provider.registerObject(PasteboardWriter.plainText(of: item, store: store) as NSString, visibility: .all)
         }
@@ -302,6 +314,7 @@ struct ContentPreview: View {
         case .image: imagePreview
         case .file: filePreview
         case .color: colorPreview
+        case .other: appContentPreview
         }
     }
 
@@ -438,6 +451,33 @@ struct ContentPreview: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 10)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.bottom, 22)
+    }
+
+    /// An app's own content: what it is and, for Final Cut Pro, the clips.
+    private var appContentPreview: some View {
+        let lines = item.text.components(separatedBy: "\n")
+        let names = Array(lines.dropFirst())
+        let isFinalCut = item.representations.contains { $0.type == AppContent.finalCutPro }
+        return VStack(spacing: 8) {
+            Image(systemName: isFinalCut ? "film.stack" : "shippingbox")
+                .font(.system(size: model.compact ? 26 : 38, weight: .light))
+                .foregroundStyle(.secondary)
+            if !model.compact {
+                Group {
+                    if names.isEmpty {
+                        Text(L("Content from %@", lines.first ?? ""))
+                    } else {
+                        Text(names.prefix(3).joined(separator: "\n") + (names.count > 3 ? "\n…" : ""))
+                    }
+                }
+                .font(.system(size: 11, weight: .medium))
+                .lineLimit(4)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 10)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

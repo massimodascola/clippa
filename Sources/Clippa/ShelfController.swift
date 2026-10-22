@@ -35,7 +35,9 @@ final class ShelfController: NSObject, NSWindowDelegate {
     private let app: AppController
     private var keyMonitor: Any?
     private var target: NSRunningApplication?
-    private(set) var isVisible = false
+    private(set) var isVisible = false {
+        didSet { app.updateHoldSuspension() }
+    }
     private lazy var preview = PreviewController(shelf: self)
     private lazy var editor = EditorController(shelf: self)
     private lazy var suggester = SuggestionEngine(store: model.store)

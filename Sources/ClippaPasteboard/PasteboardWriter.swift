@@ -20,13 +20,18 @@ public enum PasteboardWriter {
         guard !items.isEmpty else { return false }
         var pasteboardItems: [NSPasteboardItem]
 
-        if items.count == 1, mode == .original || items[0].kind == .image || items[0].kind == .file {
+        let restoresAsIs: Set<ItemKind> = [.image, .file, .other]
+        if items.count == 1, mode == .original || restoresAsIs.contains(items[0].kind) {
             pasteboardItems = restore(items[0], store: store)
         } else if items.allSatisfy({ $0.kind == .file }) {
             // Several file items paste as one selection of files.
             pasteboardItems = items.flatMap { restore($0, store: store) }
+        } else if items.allSatisfy({ $0.kind == .other }) {
+            // App content only makes sense as is: the first one.
+            pasteboardItems = restore(items[0], store: store)
         } else {
-            let text = items.map { plainText(of: $0, store: store) }.joined(separator: "\n")
+            // App content has no text to add.
+            let text = items.filter { $0.kind != .other }.map { plainText(of: $0, store: store) }.joined(separator: "\n")
             let item = NSPasteboardItem()
             item.setString(text, forType: .string)
             pasteboardItems = [item]

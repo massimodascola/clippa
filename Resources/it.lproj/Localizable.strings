@@ -10,6 +10,9 @@
 "Files" = "File";
 "Color" = "Colore";
 "Colors" = "Colori";
+"App Content" = "Contenuti di app";
+"Content from %@" = "Contenuto di %@";
+"Paste it back into %@ to use it." = "Incollalo di nuovo in %@ per usarlo.";
 "Clipboard" = "Appunti";
 "Today" = "Oggi";
 "Yesterday" = "Ieri";

@@ -139,6 +139,23 @@ struct PreviewView: View {
                     .lineLimit(4).textSelection(.enabled)
             }
             .padding(12)
+        case .other:
+            let lines = item.text.components(separatedBy: "\n")
+            VStack(alignment: .leading, spacing: 10) {
+                Text(lines.first ?? "").font(.system(size: 16, weight: .semibold))
+                Text(L("Paste it back into %@ to use it.", lines.first ?? "")).font(.system(size: 12)).foregroundStyle(.secondary)
+                if lines.count > 1 {
+                    ScrollView {
+                        Text(lines.dropFirst().joined(separator: "\n")).font(.system(size: 12)).textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                Spacer(minLength: 0)
+                Text(item.representations.map(\.type).joined(separator: "\n"))
+                    .font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary)
+                    .lineLimit(6).textSelection(.enabled)
+            }
+            .padding(16)
         }
     }
 

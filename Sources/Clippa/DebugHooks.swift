@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 import Carbon.HIToolbox
 import ClippaCore
 
@@ -11,11 +12,22 @@ import ClippaCore
 /// per line, and write "done" to debug-status.txt. Commands: show, hide,
 /// key <code> [command,shift,option,control], type <text>,
 /// flags [modifiers], click <index> [modifiers], wait <seconds>,
-/// seed <count>, report, holdtest, sheet-confirm, sheet-cancel, suggestions, suggestion, newpinboard <name>, pin <pinboard>, list <history|pinboard>,
+/// seed <count>, copy <index>, snapshot <index>, report, holdtest, sheet-confirm, sheet-cancel, suggestions, suggestion, newpinboard <name>, pin <pinboard>, list <history|pinboard>,
 /// keep <automatic|hour|day|week|month|year|forever>,
 /// settings <tab number>, stack, onboarding, close-windows.
 @MainActor
 enum DebugHooks {
+    /// The clipboard Clippa watches and writes: the system one, or, for a
+    /// test copy started with CLIPPA_DEBUG_HOOKS and CLIPPA_PASTEBOARD, a
+    /// private pasteboard of that name, so tests never touch the real one.
+    nonisolated static let pasteboard: NSPasteboard = {
+        let environment = ProcessInfo.processInfo.environment
+        if environment["CLIPPA_DEBUG_HOOKS"] != nil, let name = environment["CLIPPA_PASTEBOARD"], !name.isEmpty {
+            return NSPasteboard(name: NSPasteboard.Name(name))
+        }
+        return .general
+    }()
+
     /// Appends a line to <data folder>/debug-log.txt, only with CLIPPA_DEBUG_HOOKS.
     static func log(_ line: String) {
         guard ProcessInfo.processInfo.environment["CLIPPA_DEBUG_HOOKS"] != nil else { return }
@@ -86,6 +98,24 @@ enum DebugHooks {
                 log("sheet buttons: \(found.map(\.title))")
                 let title = command == "sheet-confirm" ? L("Delete") : L("Cancel")
                 found.first { $0.title == title }?.performClick(nil)
+            case "copy":
+                // Puts the item at that position back on the clipboard.
+                app.shelf.model.reload()
+                let items = app.shelf.model.visibleItems
+                if let index = Int(argument), items.indices.contains(index) { _ = app.shelf.copy([items[index]]) }
+            case "snapshot":
+                // Draws the card at that position into debug-card-<index>.png.
+                app.shelf.model.reload()
+                let items = app.shelf.model.visibleItems
+                if let index = Int(argument), items.indices.contains(index) {
+                    let renderer = ImageRenderer(content: CardView(item: items[index], index: index, model: app.shelf.model,
+                                                                   width: 230, height: 230).padding(10))
+                    renderer.scale = 2
+                    if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
+                       let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
+                        try? png.write(to: directory.appendingPathComponent("debug-card-\(index).png"))
+                    }
+                }
             case "report":
                 try? DiagnosticReport.build(app: app).write(to: directory.appendingPathComponent("debug-report.txt"),
                                                             atomically: true, encoding: .utf8)
@@ -207,6 +237,8 @@ enum DebugHooks {
         _ = key(true)
         let repeatOpens = key(true, repeating: true)
         _ = key(false)
+        // The shelf opens on the main thread, just after.
+        try? await Task.sleep(for: .milliseconds(50))
         check("key repeat before the delay: opens at once", opened == 2 && pasted == 1 && repeatOpens)
 
         let plainV = key(true, flags: [])
@@ -217,7 +249,7 @@ enum DebugHooks {
         _ = key(false, marked: true)
         check("Clippa's own ⌘V passes through", !ownV && pasted == 1 && opened == 2)
 
-        watcher.shouldIgnore = { true }
+        watcher.isSuspended = true
         let ignored = key(true)
         _ = key(false)
         check("ignored while the shelf is open or Paste Stack is on", !ignored && pasted == 1)

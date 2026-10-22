@@ -50,7 +50,7 @@ final class PasteService {
     @discardableResult
     func copy(_ items: [Item], plainText: Bool) -> Bool {
         let plain = plainText || UserDefaults.standard.bool(forKey: Pref.alwaysPlainText)
-        let written = PasteboardWriter.write(items, store: store, mode: plain ? .plainText : .original)
+        let written = PasteboardWriter.write(items, store: store, mode: plain ? .plainText : .original, to: DebugHooks.pasteboard)
         if written, items.count == 1 {
             Log.attempt("Paste: markCopied failed") { try store.markCopied(items[0].id) }
         }
