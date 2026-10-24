@@ -28,6 +28,8 @@ final class ClipboardMonitor {
         var sourceName: String?
         /// Dictated, not copied: saved without the copy sound.
         var isDictation = false
+        /// When it reached the clipboard, if it is saved later.
+        var copiedAt: Date?
     }
 
     /// Copies made on another device are read on this queue: their data
@@ -36,9 +38,19 @@ final class ClipboardMonitor {
     /// What is on the clipboard now (its text, or its formats), when known:
     /// Wispr Flow puts it back after a dictation.
     private var currentContent: String?
-    /// A dictation read but not saved yet: see `readDictation`.
-    private var pendingDictation: (text: String, count: Int, before: String?, until: Date)?
     private var contentBeforeLastChange: String?
+    /// After a Wispr Flow dictation: what was on the clipboard before it,
+    /// which Wispr Flow puts back, until when.
+    private var wisprRestore: (content: String?, until: Date)?
+    private let wisprQueue = DispatchQueue(label: "clippa.wispr-flow", qos: .utility)
+    /// When the latest dictation reached the clipboard, and its text once saved.
+    private var lastWisprWrite = Date.distantPast
+    private var lastWisprText: String?
+    /// The newest dictation taken from Wispr Flow's history.
+    private var lastWisprDictation: String {
+        get { UserDefaults.standard.string(forKey: "lastWisprDictation") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "lastWisprDictation") }
+    }
 
     init(onCapture: @escaping (RawCapture) -> Void) {
         self.onCapture = onCapture
@@ -75,21 +87,12 @@ final class ClipboardMonitor {
         let isLocal = !allTypes.contains(UTI.remoteClipboard)
         currentContent = isLocal && !allTypes.contains(UTI.concealed)
             ? Self.contentKey(types: allTypes, text: pasteboard.string(forType: .string)) : nil
-        if let pending = pendingDictation {
-            pendingDictation = nil
-            if Date() < pending.until, let now = currentContent, now == pending.before || now == Self.contentKey(types: [], text: pending.text) {
-                // Wispr Flow put back what was there before (or left the
-                // dictation itself): it was a dictation. Saved, and the
-                // old content is not moved in front of it.
-                Log.info("Saving a Wispr Flow dictation")
-                deliver(RawCapture(
-                    representations: [CapturedRepresentation(index: 0, type: UTI.plainText, data: Data(pending.text.utf8))],
-                    text: pending.text, fileURLs: [], sourceID: WisprFlow.bundleID, sourceName: "Wispr Flow", isDictation: true))
-                currentContent = now
-                if now == pending.before { Log.info("Copy ignored: Wispr Flow put the clipboard back") }
-                return
-            }
-            Log.info("Copy ignored: marked confidential")
+        if let restore = wisprRestore, Date() < restore.until, let now = currentContent, now == restore.content {
+            // What was there before the dictation, put back by Wispr Flow:
+            // already saved, and moving it to the front would hide the dictation.
+            wisprRestore = nil
+            Log.info("Copy ignored: Wispr Flow put the clipboard back")
+            return
         }
         if !isLocal {
             // Passwords copied on the iPhone are marked like on the Mac.
@@ -129,7 +132,7 @@ final class ClipboardMonitor {
         let defaults = UserDefaults.standard
         if allTypes.contains(UTI.concealed), defaults.bool(forKey: Pref.ignoreConfidential) {
             if WisprFlow.mightBeDictation(allTypes) {
-                readDictation(changeCount: lastChangeCount)
+                takeWisprDictation(before: contentBeforeLastChange)
             } else {
                 Log.info("Copy ignored: marked confidential")
             }
@@ -144,6 +147,12 @@ final class ClipboardMonitor {
         if let declared = items.first?.string(forType: NSPasteboard.PasteboardType(UTI.source)), !declared.isEmpty {
             sourceID = declared
             sourceName = AppIcons.name(for: declared)
+        }
+        if let restore = wisprRestore, Date() < restore.until, let dictated = lastWisprText,
+           pasteboard.string(forType: .string) == dictated {
+            // Wispr Flow left the dictation on the clipboard (nothing took the paste).
+            sourceID = WisprFlow.bundleID
+            sourceName = "Wispr Flow"
         }
         if let sourceID, Pref.ignoredAppIDs.contains(sourceID) {
             Log.info("Copy ignored: app in the ignore list")
@@ -169,30 +178,46 @@ final class ClipboardMonitor {
                           sourceID: sourceID, sourceName: sourceName)
     }
 
-    /// Wispr Flow types a dictation by putting it on the clipboard (marked
-    /// confidential), pasting it, and putting the old clipboard back half a
-    /// second later. The text is read a moment after it lands, when the app
-    /// it was pasted into has already taken it, and kept in memory only:
-    /// it is saved when Wispr Flow puts the old clipboard back, which a
-    /// password manager never does. Otherwise it is forgotten.
-    private func readDictation(changeCount count: Int) {
-        let before = contentBeforeLastChange
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            MainActor.assumeIsolated {
-                guard let self, self.pasteboard.changeCount == count,
-                      let text = self.pasteboard.string(forType: .string),
-                      self.pasteboard.changeCount == count,
-                      !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-                let until = Date().addingTimeInterval(2)
-                self.pendingDictation = (text, count, before, until)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.1) { [weak self] in
-                    MainActor.assumeIsolated {
-                        guard let self, let pending = self.pendingDictation, pending.count == count else { return }
-                        self.pendingDictation = nil
-                        Log.info("Copy ignored: marked confidential")
-                    }
+    /// A confidential copy while Wispr Flow is running: probably a
+    /// dictation. The clipboard is left alone (see WisprFlow); the dictation
+    /// is taken from Wispr Flow's history, which may record it a moment later.
+    private func takeWisprDictation(before: String?) {
+        let started = Date()
+        lastWisprWrite = started
+        wisprRestore = (before, started.addingTimeInterval(10))
+        if lastWisprDictation.isEmpty { lastWisprDictation = WisprFlow.timestamp(started.addingTimeInterval(-60)) }
+        // Dictations started up to 30 minutes ago (long ones) count.
+        let notBefore = WisprFlow.timestamp(started.addingTimeInterval(-1800))
+        let delays: [TimeInterval] = [0.3, 1, 2.5, 5, 9]
+        for (attempt, delay) in delays.enumerated() {
+            let isLast = attempt == delays.count - 1
+            wisprQueue.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self else { return }
+                let after = DispatchQueue.main.sync { MainActor.assumeIsolated { self.lastWisprDictation } }
+                guard let found = WisprFlow.dictations(after: after, notBefore: notBefore) else {
+                    if isLast { Log.warning("Wispr Flow dictation: its history could not be read") }
+                    return
+                }
+                DispatchQueue.main.async {
+                    MainActor.assumeIsolated { self.save(found, isLast: isLast) }
                 }
             }
+        }
+    }
+
+    private func save(_ dictations: [WisprFlow.Dictation], isLast: Bool) {
+        for dictation in dictations where dictation.timestamp > lastWisprDictation {
+            // Wait for the text Wispr Flow actually pasted, unless it is the last try.
+            guard dictation.isFinal || isLast else { return }
+            lastWisprDictation = dictation.timestamp
+            lastWisprText = dictation.text
+            // Dated when it reached the clipboard, even if the history was late.
+            let copiedAt = lastWisprWrite
+            Log.info("Saving a Wispr Flow dictation")
+            deliver(RawCapture(
+                representations: [CapturedRepresentation(index: 0, type: UTI.plainText, data: Data(dictation.text.utf8))],
+                text: dictation.text, fileURLs: [], sourceID: WisprFlow.bundleID, sourceName: "Wispr Flow",
+                isDictation: true, copiedAt: copiedAt))
         }
     }
 

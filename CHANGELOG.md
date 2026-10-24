@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.2 (2026-10-24)
+
+* Wispr Flow: dictations are taken from Wispr Flow's own history on this Mac (read-only), no longer from the clipboard. Reading the clipboard told Wispr Flow the paste had worked, so a dictation made with no text box selected vanished from the clipboard; now Wispr Flow behaves exactly as without Clippa, and the dictation is in the history either way. It also works with Wispr Flow 1.6, which writes its dictations differently and waits longer before putting the old clipboard back.
+* A confidential copy is never read, not even while Wispr Flow is running.
+
 ## 1.5.1 (2026-10-22)
 
 * Wispr Flow: dictations written as plain text only (no HTML) were still ignored. Clippa now reads any confidential text copy while Wispr Flow is running, keeps it in memory only, and saves it once Wispr Flow puts the old clipboard back; a password copied from a password manager never gets that restore, so it is forgotten within two seconds.

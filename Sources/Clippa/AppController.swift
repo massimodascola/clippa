@@ -143,7 +143,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let store = store!
         saveQueue.async { [weak self] in
             guard let content = ClipboardMonitor.process(raw) else { return }
-            guard let item = Log.attempt("Could not save a copy (\(raw.representations.count) formats)", { try store.save(content) }) else {
+            guard let item = Log.attempt("Could not save a copy (\(raw.representations.count) formats)", { try store.save(content, at: raw.copiedAt ?? Date()) }) else {
                 return
             }
             DispatchQueue.main.async {

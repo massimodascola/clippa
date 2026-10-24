@@ -158,7 +158,7 @@ Il registro è in `~/Library/Logs/Clippa/clippa.log`, e dopo una chiusura imprev
 ## Privacy
 
 * Tutto resta in `~/Library/Application Support/Clippa` sul tuo Mac (un database SQLite e una cartella di file), salvo che tu attivi la sincronizzazione.
-* Di predefinito Clippa ignora i contenuti segnati come riservati o temporanei (i gestori di password segnano così le password) e tutto quello che copi nei gestori di password più diffusi. L'unica eccezione è un dettato di Wispr Flow: Clippa lo salva quando Wispr Flow rimette negli appunti quello che c'era prima, cosa che un gestore di password non fa mai. Aggiungi altre app in Impostazioni → Privacy. Alcune estensioni dei browser copiano le password in un modo che nessuna app può riconoscere: se ti preoccupa, ignora anche il browser.
+* Di predefinito Clippa ignora i contenuti segnati come riservati o temporanei (i gestori di password segnano così le password) e tutto quello che copi nei gestori di password più diffusi. I dettati di Wispr Flow sono segnati allo stesso modo: Clippa non li legge dagli appunti ma dalla cronologia di Wispr Flow sul tuo Mac (in sola lettura), quindi vengono salvati anche loro. Aggiungi altre app in Impostazioni → Privacy. Alcune estensioni dei browser copiano le password in un modo che nessuna app può riconoscere: se ti preoccupa, ignora anche il browser.
 * Le anteprime dei link scaricano titolo e immagine dei link web copiati; si spengono in Impostazioni → Privacy.
 * Sospendi Clippa dalla barra dei menu (15 minuti, 1 ora, 8 ore o finché non riprendi) o con ⌘T nella barra.
 
