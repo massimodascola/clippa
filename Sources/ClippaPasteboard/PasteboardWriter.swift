@@ -68,15 +68,25 @@ public enum PasteboardWriter {
     /// Rebuilds the pasteboard items exactly as they were copied.
     private static func restore(_ item: Item, store: ClippaStore) -> [NSPasteboardItem] {
         let groups = Dictionary(grouping: item.representations, by: \.index)
+        let hasImage = item.representations.contains { UTI.imageTypes.contains($0.type) }
         return groups.keys.sorted().compactMap { index in
             let pasteboardItem = NSPasteboardItem()
             var wrote = false
             for rep in groups[index] ?? [] {
                 guard let data = store.blobs.read(rep.blob) else { continue }
+                // A photo whose file is gone: apps would look for the file,
+                // so only the saved image is pasted.
+                if rep.type == UTI.fileURL, hasImage, !fileExists(data) { continue }
                 pasteboardItem.setData(data, forType: NSPasteboard.PasteboardType(rep.type))
                 wrote = true
             }
             return wrote ? pasteboardItem : nil
         }
+    }
+
+    private static func fileExists(_ address: Data) -> Bool {
+        guard let string = String(data: address, encoding: .utf8), let url = URL(string: string),
+              let file = (url as NSURL).filePathURL else { return false }
+        return FileManager.default.fileExists(atPath: file.path)
     }
 }

@@ -189,7 +189,7 @@ CLIPPA_SIGN_IDENTITY="Apple Development" sh build.sh --install
 
 * No shared pinboards: sharing with other people would need a server or CloudKit.
 * Suggestions are ranked by Apple Intelligence only on Macs where it is available and turned on; otherwise Clippa uses its own on-device ranking.
-* Copied files are kept as references: if the file is moved or deleted, the card stays but the file is gone.
+* Copied files are kept as references: if the file is moved or deleted, the card stays but the file is gone. Photos are the exception: Clippa keeps the image itself (JPEG, HEIC, PNG, TIFF, GIF, WebP), so it still pastes after the file is gone.
 * Final Cut Pro clips: Clippa keeps what Final Cut Pro puts on the clipboard, not the media, which must still be available when you paste. The clip names come from an undocumented format: if a card shows none, pasting still works.
 * There is no prebuilt download: the app is signed ad hoc by the Mac that builds it.
 

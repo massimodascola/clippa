@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0 (2026-11-03)
+
+* Photos copied as files are kept in Clippa. A photo copied in the Finder used to be saved only as a reference to its file; Clippa now keeps the image itself too (JPEG, HEIC, PNG, TIFF, GIF, WebP, up to 60 MB per copy), so it still pastes after the file is moved or deleted. A single photo becomes an Image card named after its file; several files copied together stay a Files card, with their images inside.
+* Photos copied in the Photos app are saved as images, no longer as files.
+* When the file of a saved photo is gone, Clippa pastes the saved image instead of the missing file.
+
 ## 1.5.2 (2026-10-24)
 
 * Wispr Flow: dictations are taken from Wispr Flow's own history on this Mac (read-only), no longer from the clipboard. Reading the clipboard told Wispr Flow the paste had worked, so a dictation made with no text box selected vanished from the clipboard; now Wispr Flow behaves exactly as without Clippa, and the dictation is in the history either way. It also works with Wispr Flow 1.6, which writes its dictations differently and waits longer before putting the old clipboard back.

@@ -189,7 +189,7 @@ CLIPPA_SIGN_IDENTITY="Apple Development" sh build.sh --install
 
 * Niente bacheche condivise: condividerle con altre persone richiederebbe un server o CloudKit.
 * I suggerimenti sono ordinati da Apple Intelligence solo sui Mac dove è disponibile e attiva; altrimenti Clippa usa il suo ordinamento sul Mac.
-* I file copiati sono conservati come riferimenti: se il file viene spostato o cancellato, la scheda resta ma il file non c'è più.
+* I file copiati sono conservati come riferimenti: se il file viene spostato o cancellato, la scheda resta ma il file non c'è più. Le foto fanno eccezione: Clippa conserva l'immagine stessa (JPEG, HEIC, PNG, TIFF, GIF, WebP), quindi si incolla anche quando il file non c'è più.
 * Clip di Final Cut Pro: Clippa conserva quello che Final Cut Pro mette negli appunti, non i file multimediali, che devono essere ancora disponibili quando incolli. I nomi delle clip vengono da un formato non documentato: se una scheda non li mostra, incollare funziona lo stesso.
 * Non c'è un download già pronto: l'app viene firmata ad hoc dal Mac che la compila.
 

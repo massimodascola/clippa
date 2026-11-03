@@ -1,4 +1,5 @@
 import AppKit
+import UniformTypeIdentifiers
 import ClippaCore
 import ClippaPasteboard
 
@@ -281,13 +282,24 @@ final class ClipboardMonitor {
             return content
         }
         if !fileURLs.isEmpty {
-            let paths = fileURLs.map(\.path)
-            content = CapturedContent(kind: .file, text: paths.joined(separator: "\n"),
-                                      identity: paths.joined(separator: "\n"), representations: representations)
-            // A single image file gets a real thumbnail.
-            if fileURLs.count == 1, let data = try? Data(contentsOf: fileURLs[0], options: .mappedIfSafe),
-               data.count < 80 * 1024 * 1024, ImageTools.pixelSize(of: data) != nil {
-                content.thumbnail = ImageTools.thumbnail(of: data)
+            let reps = addingImagesOfFiles(to: representations)
+            let file = (fileURLs[0] as NSURL).filePathURL ?? fileURLs[0]
+            if fileURLs.count == 1, UTType(filenameExtension: file.pathExtension)?.conforms(to: .image) == true,
+               let image = preferredImage(in: reps) {
+                // A single photo (Finder, the Photos app): an image, named after its file.
+                let size = ImageTools.pixelSize(of: image.data)
+                content = CapturedContent(kind: .image, text: file.lastPathComponent, identity: BlobStore.hash(image.data),
+                                          representations: reps, thumbnail: ImageTools.thumbnail(of: image.data),
+                                          imageWidth: size?.width, imageHeight: size?.height)
+            } else {
+                let paths = fileURLs.map(\.path)
+                content = CapturedContent(kind: .file, text: paths.joined(separator: "\n"),
+                                          identity: paths.joined(separator: "\n"), representations: reps)
+                // A single image file gets a real thumbnail.
+                if fileURLs.count == 1, let data = try? Data(contentsOf: fileURLs[0], options: .mappedIfSafe),
+                   data.count < 80 * 1024 * 1024, ImageTools.pixelSize(of: data) != nil {
+                    content.thumbnail = ImageTools.thumbnail(of: data)
+                }
             }
         } else if let imageRep, text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     || Classifier.link(text) != nil {
@@ -327,6 +339,30 @@ final class ClipboardMonitor {
             return text
         }
         return nil
+    }
+
+    /// Photos copied as files (from the Finder, say) carry only the file's
+    /// address: the image itself is added, so the copy survives the file
+    /// being moved or deleted. Images the copy already holds are not read again.
+    nonisolated private static func addingImagesOfFiles(to reps: [CapturedRepresentation]) -> [CapturedRepresentation] {
+        let files = reps.filter { $0.type == UTI.fileURL }
+        let hasImage: (Int?) -> Bool = { index in
+            reps.contains { UTI.imageTypes.contains($0.type) && (index == nil || $0.index == index) }
+        }
+        // One file and an image (the Photos app, Telegram): that image is the file's.
+        if files.count == 1, hasImage(nil) { return reps }
+        var result = reps
+        var total = reps.reduce(0) { $0 + $1.data.count }
+        for rep in files where !hasImage(rep.index) {
+            guard let address = String(data: rep.data, encoding: .utf8), let url = URL(string: address),
+                  let file = (url as NSURL).filePathURL,
+                  let type = UTType(filenameExtension: file.pathExtension)?.identifier, UTI.imageTypes.contains(type),
+                  let data = try? Data(contentsOf: file, options: .mappedIfSafe),
+                  total + data.count <= maxTotalSize else { continue }
+            result.append(CapturedRepresentation(index: rep.index, type: type, data: data))
+            total += data.count
+        }
+        return result
     }
 
     /// The image format worth keeping as "the" image of a copy.
